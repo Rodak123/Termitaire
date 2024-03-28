@@ -1,7 +1,5 @@
 package com.rodak.termitaire;
 
-import java.util.Arrays;
-
 public class Termitaire {
 
     private static boolean running;
