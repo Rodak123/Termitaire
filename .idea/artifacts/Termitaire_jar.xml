@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Termitaire:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Termitaire_jar</output-path>
+    <root id="archive" name="Termitaire.jar">
+      <element id="module-output" name="Termitaire" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/snakeyaml-2.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
