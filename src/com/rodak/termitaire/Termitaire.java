@@ -20,7 +20,6 @@ public class Termitaire {
         GameBinds.loadBindsFromFile();
 
         clearScreen();
-        System.out.println();
         printTitle();
         System.out.println();
         System.out.println(String.join("\n", new String[]{
