@@ -4,7 +4,7 @@ import java.util.Stack;
 
 public class GamePlotter {
     public final static int[] cardSpacing = new int[]{1, 2};
-    private final static int cardIndexSpace = 3 + cardSpacing[0];
+    private final static int cardIndexSpace = 4 + cardSpacing[0];
 
     private final static ColoredString.Color keysColor = ColoredString.Color.GREEN;
     private final static ColoredString.Color handColor = ColoredString.Color.PURPLE;
@@ -70,14 +70,15 @@ public class GamePlotter {
     }
 
     private static void plotKey(int x, int y, String key, ConsoleCanvas canvas) {
-        canvas.plot(x, y, "[" + key + "]");
+        canvas.plot(x, y, "[" + key.charAt(0) + "]");
         canvas.setColor(x + 1, y, keysColor);
     }
 
     private static void plotCardIndexes(int x, int y, int upto, ConsoleCanvas canvas) {
-        for (int i = 0; i < upto; i++) {
-            canvas.plot(x, y, "[" + i + "]");
-            canvas.setColor(x + 1, y, keysColor);
+        for (int i = 0; i < Math.min(upto, 99); i++) {
+            String index = String.valueOf(i);
+            canvas.plot(x, y, "[" + (index.length() == 1 ? " " : "") + index + "]");
+            canvas.setColors(x + 1, y, keysColor, 2);
             y += GamePlotter.cardSpacing[1];
         }
     }
@@ -123,7 +124,7 @@ public class GamePlotter {
     }
 
     public static ConsoleCanvas createFittingCanvas(Game game) {
-        return new ConsoleCanvas(cardIndexSpace + (Card.plotWidth + GamePlotter.cardSpacing[0]) * (game.getTableau().size() + 2) - 1, Card.plotHeight + GamePlotter.cardSpacing[1] * (Card.Rank.values().length + 1) + 2);
+        return new ConsoleCanvas(cardIndexSpace + (Card.plotWidth + GamePlotter.cardSpacing[0]) * (game.getTableau().size() + 2), Card.plotHeight + GamePlotter.cardSpacing[1] * (Card.Rank.values().length + 2) + 2);
     }
 
 }

@@ -101,6 +101,7 @@ public class ActionInput {
             }
         }
         if (match == -1) {
+            Termitaire.clearScreen();
             System.out.println("No action matches '" + input + "'");
         }
         actionList.clear();

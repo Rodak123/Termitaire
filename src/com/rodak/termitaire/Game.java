@@ -58,6 +58,7 @@ public class Game {
         }
 
         stock.addAll(cards);
+
     }
 
     public List<Stack<Card>> getFoundations() {
@@ -203,7 +204,7 @@ public class Game {
                     return "Draw a card";
                 }
             });
-        } else {
+        } else if (!waste.empty()) {
             actions.add(new Action() {
                 @Override
                 public void execute(String key, int index) {
@@ -300,7 +301,8 @@ public class Game {
                         return;
                     }
 
-                    if (column.size() == 1) {
+                    boolean oneVisibleCard = column.size() == 1 || (column.get(column.size() - 2).isHidden());
+                    if (oneVisibleCard) {
                         selectedCardsPile.add(column.pop());
                     } else {
                         String[] cardInput = ActionInput.promptInput("Which card to select? ")

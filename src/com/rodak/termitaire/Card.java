@@ -75,11 +75,11 @@ public class Card {
         boolean isRankShort = rank.length() < 2;
 
         String[] cardLines = new String[plotHeight];
-        cardLines[0] = "#-------#";
+        cardLines[0] = "+-------+";
         cardLines[1] = "| " + suit + "  " + (isRankShort ? " " + rank : rank) + " |";
         cardLines[2] = "|       |";
         cardLines[3] = "| " + (isRankShort ? rank + " " : rank) + "  " + suit + " |";
-        cardLines[4] = "#-------#";
+        cardLines[4] = "+-------+";
         return cardLines;
     }
 
