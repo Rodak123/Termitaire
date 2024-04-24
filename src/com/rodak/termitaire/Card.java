@@ -157,6 +157,7 @@ public class Card {
 
     public void show() {
         hidden = false;
+        Termitaire.game.getStatistics().didACardFlip();
     }
 
     public void hide() {

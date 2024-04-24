@@ -1,0 +1,32 @@
+_CTITLE_Cards_RESET_
+ Each card is represented by its RANK and SUIT.
+  RANK can be _GREEN__RANKS__RESET_
+  SUIT can be _SUITS_
+
+_CTITLE_Places_RESET_
+ _CPLACE_Foundations_RESET_ - Four stacks in the top left corner
+ _CPLACE_Hand_RESET_ - Column of cards in the top right corner
+ _CPLACE_Stock_RESET_ - Pile of cards next to the hand
+ _CPLACE_Waste_RESET_ - Pile of cards next to the stock
+ _CPLACE_Tableau_RESET_ - Seven columns in the second row of cards
+
+_CTITLE_Goal_RESET_
+ In solitaire, your goal is to put all cards into their foundations.
+
+_CTITLE_Controls_RESET_
+ To execute an action, type it's command and press _PURPLE_ENTER/RETURN_RESET_
+ Selecting card/s from a tableau column (Which card to select?):
+  _CPLACE_1)_RESET_ Leave it empty, if you want to select the very top card
+  _CPLACE_2)_RESET_ Type the index (Numbers on both sides: [_GREEN_NUMBER_RESET_])
+  _CPLACE_3)_RESET_ Type the card's SUIT and RANK. For example to select FIVE of HEARTS: '_RED__CARD-EXAMPLE__RESET_' (Not case sensitive)
+
+_CTITLE_Scoring_RESET_
+ _GREEN_10_RESET_ points for each card moved to a foundation stack.
+ _GREEN_5_RESET_ points for each card moved from the waste to a tableau stack.
+ _GREEN_5_RESET_ points for each card turned face-up in a tableau stack.
+ _GREEN_3_RESET_ points for each card moved from one tableau stack to another.
+ _RED_-2_RESET_ points for each 10 seconds elapsed during a timed game. (Evaluated after completion)
+ _RED_-15_RESET_ points for each card moved from a foundation stack to a tableau stack.
+ _RED_-20_RESET_ points for each pass through the stock after four passes (Draw Three option).
+ _RED_-100_RESET_ points for each pass through the stock after one pass (Draw One option).
+ You receive a _GREEN_bonus_RESET_ when you complete a timed game. The shorter the game, the larger the bonus.

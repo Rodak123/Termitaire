@@ -10,10 +10,15 @@ public class Game {
     private final Stack<Card> stock;
 
     private final Stack<Card> selectedCardsPile;
+    private SelectablePlace selectedCardPilePlace;
+
     private Stack<Card> selectedCardsPileSource = null;
 
     private boolean playing;
     private boolean started;
+    private GameOption option;
+
+    private GameStatistics statistics = new GameStatistics();
 
     public Game() {
         playing = false;
@@ -33,9 +38,19 @@ public class Game {
         }
     }
 
-    public void newGame() {
+    public boolean didWin() {
+        for (Stack<Card> foundation : foundations) {
+            if (foundation.size() < Card.Rank.values().length) return false;
+        }
+        return true;
+    }
+
+    public void newGame(GameOption option) {
         playing = true;
         started = true;
+        this.option = option;
+
+        statistics = new GameStatistics();
 
         waste.clear();
         stock.clear();
@@ -58,7 +73,6 @@ public class Game {
         }
 
         stock.addAll(cards);
-
     }
 
     public List<Stack<Card>> getFoundations() {
@@ -85,12 +99,22 @@ public class Game {
         return playing;
     }
 
+    public GameStatistics getStatistics() {
+        return statistics;
+    }
+
     public void addSelectedCardsToStack(Stack<Card> stack) {
         stack.addAll(selectedCardsPile);
         selectedCardsPile.clear();
 
-        if (!selectedCardsPileSource.empty()) selectedCardsPileSource.peek().show();
+        if (!selectedCardsPileSource.empty()) {
+            selectedCardsPileSource.peek().show();
+            if (selectedCardPilePlace == SelectablePlace.TABLEAU) {
+                statistics.getScoreCounter().cardTurnedUpInATableau();
+            }
+        }
         selectedCardsPileSource = null;
+        selectedCardPilePlace = null;
     }
 
     public List<Action> getActions() {
@@ -110,6 +134,7 @@ public class Game {
                         selectedCardsPileSource.addAll(selectedCardsPile);
                         selectedCardsPile.clear();
                         selectedCardsPileSource = null;
+                        selectedCardPilePlace = null;
                     }
 
                     @Override
@@ -165,7 +190,44 @@ public class Game {
         actions.add(new Action() {
             @Override
             public void execute(String key, int index) {
-                newGame();
+                for (int i = 0; i < GameOption.values().length; i++) {
+                    GameOption gameOption = GameOption.values()[i];
+                    System.out.println((i + 1) + ") " + gameOption.toString());
+                }
+
+                String input = ActionInput.promptInput("Which option (Option name, index or empty)? ").strip().toLowerCase();
+
+                if (input.length() > 0) {
+                    GameOption foundOption = null;
+                    try {
+                        int optionIndex = Integer.parseInt(input) - 1;
+                        if (optionIndex >= 0 && optionIndex < GameOption.values().length) {
+                            foundOption = GameOption.values()[optionIndex];
+                        }
+                    } catch (NumberFormatException e) {
+                        for (GameOption gameOption : GameOption.values()) {
+                            String gameOptionName = gameOption.name().toLowerCase();
+                            if (gameOptionName.equals(input)) {
+                                foundOption = gameOption;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (foundOption != null) {
+                        newGame(foundOption);
+                    } else {
+                        System.out.println("No matching option found. Aborting.");
+                    }
+                } else {
+                    for (GameOption gameOption : GameOption.values()) {
+                        if (gameOption.isDefault()) {
+                            newGame(gameOption);
+                            return;
+                        }
+                    }
+                    System.out.println("No default option found. Aborting.");
+                }
             }
 
             @Override
@@ -175,7 +237,7 @@ public class Game {
 
             @Override
             public String getInfo() {
-                return "Create new game";
+                return "Start a new game";
             }
         });
 
@@ -187,8 +249,12 @@ public class Game {
             actions.add(new Action() {
                 @Override
                 public void execute(String key, int index) {
-                    waste.add(stock.pop());
-                    waste.peek().show();
+                    for (int i = 0; i < option.getDrawCount(); i++) {
+                        waste.add(stock.pop());
+                        waste.peek().show();
+                    }
+
+                    statistics.didADraw();
                 }
 
                 @Override
@@ -214,6 +280,19 @@ public class Game {
                         card.hide();
                     }
                     Collections.shuffle(stock);
+
+                    switch (option) {
+                        case SingleDraw -> {
+                            if (statistics.getRedealCount() == 0) break;
+                            statistics.getScoreCounter().passedThroughDeckAfterOnePass();
+                        }
+                        case TripleDraw -> {
+                            if (statistics.getRedealCount() < 3) break;
+                            statistics.getScoreCounter().passedThroughDeckAfterThreePasses();
+                        }
+                    }
+
+                    statistics.didARedeal();
                 }
 
                 @Override
@@ -242,6 +321,7 @@ public class Game {
                     Card card = selectedCardsPile.get(0);
                     if (Card.canCardStack(base, card, Card.CardStackRuleset.FOUNDATION)) {
                         addSelectedCardsToStack(foundation);
+                        statistics.getScoreCounter().cardMovedToAFoundation();
                     } else {
                         if (base == null) {
                             System.out.println(card + " is not a foundation starter");
@@ -249,6 +329,8 @@ public class Game {
                             System.out.println("Can't stack " + card + " on " + base);
                         }
                     }
+
+                    statistics.didAMove();
                 }
 
                 @Override
@@ -274,6 +356,7 @@ public class Game {
 
                     selectedCardsPile.add(foundation.pop());
                     selectedCardsPileSource = foundation;
+                    selectedCardPilePlace = SelectablePlace.FOUNDATION;
                 }
 
                 @Override
@@ -349,6 +432,7 @@ public class Game {
 
                     if (column.size() != initialSize) {
                         selectedCardsPileSource = column;
+                        selectedCardPilePlace = SelectablePlace.TABLEAU;
                     }
                 }
 
@@ -376,6 +460,14 @@ public class Game {
                     Card card = selectedCardsPile.get(0);
                     if (Card.canCardStack(base, card, Card.CardStackRuleset.TABLEAU)) {
                         addSelectedCardsToStack(column);
+                        switch (selectedCardPilePlace) {
+                            case WASTE -> statistics.getScoreCounter().cardMovedFromWasteToTableau();
+                            case TABLEAU -> {
+                                if (selectedCardsPileSource == column) break;
+                                statistics.getScoreCounter().cardMovedBetweenTableauStacks();
+                            }
+                            case FOUNDATION -> statistics.getScoreCounter().cardMovedFromAFoundationToTableau();
+                        }
                     } else {
                         if (base == null) {
                             System.out.println(card + " is not a tableau column starter");
@@ -383,6 +475,8 @@ public class Game {
                             System.out.println("Can't stack " + card + " on " + base);
                         }
                     }
+
+                    statistics.didAMove();
                 }
 
                 @Override
@@ -406,6 +500,7 @@ public class Game {
                 public void execute(String key, int index) {
                     selectedCardsPile.add(waste.pop());
                     selectedCardsPileSource = waste;
+                    selectedCardPilePlace = SelectablePlace.WASTE;
                 }
 
                 @Override

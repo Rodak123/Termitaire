@@ -1,6 +1,6 @@
 package com.rodak.termitaire;
 
-import java.util.Stack;
+import java.util.*;
 
 public class GamePlotter {
     public final static int[] cardSpacing = new int[]{1, 2};
@@ -10,8 +10,13 @@ public class GamePlotter {
     private final static ColoredString.Color handColor = ColoredString.Color.PURPLE;
 
     public static void plotGameToCanvas(Game game, ConsoleCanvas canvas) {
+        if (game.didWin()) {
+            plotVictoryMessage(game, canvas);
+            return;
+        }
+
         int x = cardIndexSpace;
-        int y = 1;
+        int y = 2;
 
         int centerLabelXOff = (int) Math.floor(Card.plotWidth / 2.0) - 1;
 
@@ -21,7 +26,7 @@ public class GamePlotter {
             plotCardStack(x, y, foundation, CardStackMode.PILE, canvas);
 
             // Foundation Key
-            plotKey(x + centerLabelXOff, 0, GameBinds.Foundations[i], canvas);
+            plotKey(x + centerLabelXOff, y - 1, GameBinds.Foundations[i], canvas);
 
             x += Card.plotWidth + GamePlotter.cardSpacing[0];
         }
@@ -31,24 +36,35 @@ public class GamePlotter {
         plotCardStack(x, y, game.getWaste(), CardStackMode.LAST_THREE, canvas);
 
         // Waste key
-        plotKey(x + centerLabelXOff, 0, GameBinds.Waste[0], canvas);
+        plotKey(x + centerLabelXOff, y - 1, GameBinds.Waste[0], canvas);
 
         // Stock
         x += Card.plotWidth + GamePlotter.cardSpacing[0];
         plotCardStack(x, y, game.getStock(), CardStackMode.PILE, canvas);
 
         // Stock key
-        plotKey(x + centerLabelXOff, 0, GameBinds.Stock[0], canvas);
+        plotKey(x + centerLabelXOff, y - 1, GameBinds.Stock[0], canvas);
+
+        // Game Data
+        x += (Card.plotWidth + GamePlotter.cardSpacing[0]) * 2;
+        int statOff = 0;
+
+        plotColoredText(x, y - 1 + statOff, "Time:", handColor, canvas);
+        String timeStat = game.getStatistics().getFormattedGameTime(false);
+        canvas.plot(x, y + statOff, timeStat.substring(0, Math.min(timeStat.length(), 9)));
+        statOff += 3;
+
+        plotColoredText(x, y - 1 + statOff, "Score:", handColor, canvas);
+        String scoreStat = String.valueOf(game.getStatistics().getScoreCounter().getScore());
+        canvas.plot(x, y + statOff, scoreStat.substring(0, Math.min(scoreStat.length(), 9)));
 
         // Selected cards
-        x += (Card.plotWidth + GamePlotter.cardSpacing[0]) * 2;
-        canvas.plot(x, 0, "Hand:");
-        canvas.setColors(x, 0, handColor, 5);
+        y += Card.plotHeight + GamePlotter.cardSpacing[1];
+        plotColoredText(x, y - 1, "Hand:", handColor, canvas);
 
         plotCardStack(x, y, game.getSelectedCardsPile(), CardStackMode.STAGGERED, canvas);
 
         x = cardIndexSpace;
-        y += Card.plotHeight + GamePlotter.cardSpacing[1];
 
         int mostCardsInPile = 0;
         for (int i = 0; i < game.getTableau().size(); i++) {
@@ -67,6 +83,57 @@ public class GamePlotter {
         plotCardIndexes(0, y, mostCardsInPile, canvas);
         plotCardIndexes(x, y, mostCardsInPile, canvas);
 
+    }
+
+    private static void plotColoredText(int x, int y, String text, ColoredString.Color color, ConsoleCanvas canvas) {
+        canvas.plot(x, y, text);
+        canvas.setColors(x, y, color, text.length());
+    }
+
+    private static void plotVictoryMessage(Game game, ConsoleCanvas canvas) {
+        ColoredString.Color victoryMessageColor = ColoredString.Color.YELLOW;
+        ColoredString.Color statColor = ColoredString.Color.GREEN;
+        ColoredString.Color valueColor = ColoredString.Color.BLUE;
+
+        int dashes = Termitaire.titleDashCount();
+        int halfDashes = dashes / 2;
+
+        String victoryMessage = Termitaire.centerText("Game won!", dashes);
+
+        LinkedHashMap<String, String> stats = game.getStatistics().getAllAndReset();
+
+        int x = canvas.width / 2 - halfDashes;
+        int y = canvas.height / 2 - (stats.size() + 4) / 2;
+
+        canvas.plot(x, y, "-".repeat(dashes));
+        y += 2;
+
+        canvas.setColors(x, y, victoryMessageColor, victoryMessage.length());
+        canvas.plot(x, y, victoryMessage);
+        y += 2;
+
+        canvas.plot(x, y, Termitaire.centerText(Termitaire.centerText("Stats", dashes - 2, "-"), dashes));
+        y++;
+
+        for (Map.Entry<String, String> entry : stats.entrySet()) {
+            String stat = Termitaire.rightAlignText(entry.getKey(), halfDashes) + ":";
+            String value = entry.getValue();
+
+            // stat: value
+
+            canvas.setColors(x, y, statColor, stat.length() - 1);
+            canvas.plot(x, y, stat);
+
+            canvas.plot(x + stat.length(), y, " ");
+
+            int valueX = x + stat.length() + 1;
+            canvas.setColors(valueX, y, valueColor, value.length());
+            canvas.plot(valueX, y, value);
+
+            y++;
+        }
+
+        canvas.plot(x, y, "-".repeat(dashes));
     }
 
     private static void plotKey(int x, int y, String key, ConsoleCanvas canvas) {

@@ -1,5 +1,12 @@
 package com.rodak.termitaire;
 
+import java.nio.file.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class Termitaire {
 
     private static boolean running;
@@ -10,7 +17,9 @@ public class Termitaire {
     private static final String DESCRIPTION = "Text-based solitaire.";
     private static final String AUTHOR = "Radek Titěra";
     private static final String AUTHOR_URL = "https://www.therodak.online/";
-    private static final String VERSION = "0.1";
+    private static final String VERSION = "1.0";
+
+    public static Game game;
 
     public static void main(String[] args) {
         checkJavaVersion();
@@ -21,11 +30,9 @@ public class Termitaire {
         printTitle();
         System.out.println();
         System.out.println(String.join("\n", new String[]{
-                "This is not a finished project.",
                 "Todo:",
-                "- Detecting when player wins",
-                "- Tracking time",
-                "- Tracking score",
+                "- Saving game + Loading saves",
+                "- Sound?",
                 "- Change binds from app"
         }));
         System.out.println();
@@ -34,7 +41,7 @@ public class Termitaire {
     }
 
     private static void printTitle() {
-        int dashes = 24;
+        int dashes = titleDashCount();
         System.out.println(String.join("\n", new String[]{
                 "-".repeat(dashes),
                 centerText(NAME, dashes),
@@ -57,7 +64,7 @@ public class Termitaire {
 
         ActionInput actionInput = new ActionInput();
 
-        Game game = new Game();
+        game = new Game();
         ConsoleCanvas canvas = GamePlotter.createFittingCanvas(game);
 
         while (running) {
@@ -123,35 +130,35 @@ public class Termitaire {
                     ranks[i] = Card.Rank.values()[i].getShortName();
                 }
 
-                System.out.println(String.join("\n", new String[]{
-                        ColoredString.colorizeString("Cards", titleColor),
-                        " Each card is represented by its RANK and SUIT.",
-                        "  RANK can be " + ColoredString.colorizeString(String.join(", ", ranks), ColoredString.Color.GREEN),
-                        "  SUIT can be " +
-                                ColoredString.colorizeString(Card.Suit.SPADES.getShortName(), Card.BLACK) + " (for spades), " +
-                                ColoredString.colorizeString(Card.Suit.HEARTS.getShortName(), Card.RED) + " (for hearts), " +
-                                ColoredString.colorizeString(Card.Suit.CLUBS.getShortName(), Card.BLACK) + " (for clubs), " +
-                                ColoredString.colorizeString(Card.Suit.DIAMONDS.getShortName(), Card.RED) + " (for diamonds)",
-                        "",
-                        ColoredString.colorizeString("Places", titleColor),
-                        " " + ColoredString.colorizeString("Foundations", placeColor) + " - Four stacks in the top left corner",
-                        " " + ColoredString.colorizeString("Hand", placeColor) + " - Column of cards in the top right corner",
-                        " " + ColoredString.colorizeString("Stock", placeColor) + " - Pile of cards next to the hand",
-                        " " + ColoredString.colorizeString("Waste", placeColor) + " - Pile of cards next to the stock",
-                        " " + ColoredString.colorizeString("Tableau", placeColor) + " - Seven columns in the second row of cards",
-                        "",
-                        ColoredString.colorizeString("Goal", titleColor),
-                        " In solitaire, your goal is to put all cards into their foundations.",
-                        "",
-                        ColoredString.colorizeString("Controls", titleColor),
-                        " To execute an action, type it's command and press " + ColoredString.colorizeString("ENTER/RETURN", ColoredString.Color.PURPLE),
-                        " Selecting card/s from a tableau column (Which card to select? ):",
-                        "  1) Leave it empty, if you want to select the very top card",
-                        "  2) Type the index (Numbers on both sides: [" + ColoredString.colorizeString("NUMBER", ColoredString.Color.GREEN) + "])",
-                        "  3) Type the card's SUIT and RANK. For example to select FIVE of HEARTS: '" +
-                                ColoredString.colorizeString(Card.Suit.HEARTS.getShortName() + " " + Card.Rank.FIVE.getShortName(), Card.RED) +
-                                "' (Not case sensitive)"
-                }));
+                Path filePath = Paths.get("resources", "help.txt");
+
+                try (Stream<String> lines = Files.lines(filePath)) {
+                    String helpText = lines.collect(Collectors.joining(System.lineSeparator()));
+
+                    HashMap<String, String> vars = new HashMap<>();
+
+                    for (ColoredString.Color color : ColoredString.Color.values()) {
+                        vars.put("_" + color.name().toUpperCase() + "_", color.toString());
+                    }
+                    vars.put("_CTITLE_", titleColor.toString());
+                    vars.put("_CPLACE_", placeColor.toString());
+                    vars.put("_SUITS_",
+                            ColoredString.colorizeString(Card.Suit.SPADES.getShortName(), Card.BLACK) + " (for spades), " +
+                                    ColoredString.colorizeString(Card.Suit.HEARTS.getShortName(), Card.RED) + " (for hearts), " +
+                                    ColoredString.colorizeString(Card.Suit.CLUBS.getShortName(), Card.BLACK) + " (for clubs), " +
+                                    ColoredString.colorizeString(Card.Suit.DIAMONDS.getShortName(), Card.RED) + " (for diamonds)"
+                    );
+                    vars.put("_RANKS_", String.join(", ", ranks));
+                    vars.put("_CARD-EXAMPLE_", Card.Suit.HEARTS.getShortName() + " " + Card.Rank.FIVE.getShortName());
+
+                    for (Map.Entry<String, String> entry : vars.entrySet()) {
+                        helpText = helpText.replaceAll(entry.getKey().toUpperCase(), entry.getValue());
+                    }
+
+                    System.out.println(helpText);
+                } catch (IOException e) {
+                    System.out.println("Did not find '" + ColoredString.colorizeString("help.txt", ColoredString.Color.RED) + "'");
+                }
             }
 
             @Override
@@ -178,18 +185,34 @@ public class Termitaire {
     }
 
     public static String centerText(String text, int width) {
+        return centerText(text, width, " ");
+    }
+
+    public static String centerText(String text, int width, String filler) {
         int spaceLeft = width - text.length();
         if (spaceLeft <= 0) {
             return text;
         }
         int right = Math.floorDiv(spaceLeft, 2);
         int left = spaceLeft - right;
-        return " ".repeat(left) + text + " ".repeat(right);
+        return filler.repeat(left) + text + filler.repeat(right);
+    }
+
+    public static String rightAlignText(String text, int width) {
+        int spacesLeft = width - text.length();
+        if (spacesLeft <= 0) {
+            return text;
+        }
+        return " ".repeat(spacesLeft) + text;
     }
 
     public static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
+    }
+
+    public static int titleDashCount() {
+        return 32;
     }
 
 }

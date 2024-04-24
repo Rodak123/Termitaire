@@ -29,7 +29,7 @@ public class ActionInput {
     }
 
     public void executeAction() {
-        int maxRows = 3;
+        int maxRows = 2;
         int marginLeft = 4;
 
         ColoredString.Color commandColor = ColoredString.Color.GREEN;
@@ -76,6 +76,7 @@ public class ActionInput {
         }
 
         String input = promptInput("?: ").toLowerCase();
+        Termitaire.game.getStatistics().pressedKeys(input.length() + 1); // Keys pressed to type (does not account for pasting) + RET
         if (input.length() == 0) {
             input = "_";
         }
