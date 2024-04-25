@@ -43,7 +43,6 @@ public class Termitaire {
 //                "- Saving game + Loading saves",
 //        }));
 //        System.out.println();
-
         runGame();
     }
 

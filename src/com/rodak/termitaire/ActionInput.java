@@ -29,7 +29,7 @@ public class ActionInput {
     }
 
     public void executeAction() {
-        int maxRows = 2;
+        int maxRows = GameSettings.getInstance().getSetting("input/actionRows").getIntVal();
         int marginLeft = 4;
 
         ColoredString.Color commandColor = ColoredString.Color.GREEN;

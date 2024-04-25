@@ -180,23 +180,34 @@ public class GameSettings {
     public static final String SETTINGS_FILE_NAME = Termitaire.NAME.toLowerCase() + "_settings.txt";
 
     private final HashMap<String, Value> settings;
+    private final LinkedHashMap<String, String> groups;
 
     public GameSettings() {
         settings = new HashMap<>();
+        groups = new LinkedHashMap<>();
 
-        settings.put("binds/waste", new Value(String.join(" ", GameBinds.Waste)));
-        settings.put("binds/stock", new Value(String.join(" ", GameBinds.Stock)));
-        settings.put("binds/tableau", new Value(String.join(" ", GameBinds.Tableau), 14, 14));
-        settings.put("binds/foundations", new Value(String.join(" ", GameBinds.Foundations), 8, 8));
-        settings.put("binds/unselect", new Value(String.join(" ", GameBinds.Unselect)));
+        putSetting("binds/waste", new Value(String.join(" ", GameBinds.Waste)));
+        putSetting("binds/stock", new Value(String.join(" ", GameBinds.Stock)));
+        putSetting("binds/tableau", new Value(String.join(" ", GameBinds.Tableau), 14, 14));
+        putSetting("binds/foundations", new Value(String.join(" ", GameBinds.Foundations), 8, 8));
+        putSetting("binds/unselect", new Value(String.join(" ", GameBinds.Unselect)));
 
-        settings.put("cards/spades", new Value("x"));
-        settings.put("cards/hearts", new Value("V"));
-        settings.put("cards/clubs", new Value("o"));
-        settings.put("cards/diamonds", new Value("^"));
+        putSetting("cards/spades", new Value("x"));
+        putSetting("cards/hearts", new Value("V"));
+        putSetting("cards/clubs", new Value("o"));
+        putSetting("cards/diamonds", new Value("^"));
 
-        settings.put("audio/mute", new Value(false));
-        settings.put("audio/volume", new Value(1.0, 0, 1));
+        putSetting("audio/mute", new Value(false));
+        putSetting("audio/volume", new Value(1.0, 0, 1));
+
+        putSetting("input/actionRows", new Value(3, 1, -1));
+    }
+
+    private void putSetting(String bind, Value value) {
+        settings.put(bind, value);
+
+        String group = bind.split("/")[0];
+        groups.put(group, "");
     }
 
     public void loadSettings() {
@@ -257,7 +268,7 @@ public class GameSettings {
             Termitaire.clearScreen();
             listAllSettings();
 
-            String settingKey = ActionInput.promptInput("What setting do you want to change (type the blue key or nothing to quit)? ").strip().toLowerCase();
+            String settingKey = ActionInput.promptInput("What setting do you want to change (type the blue key or nothing to quit)? ").strip();
             if (settingKey.length() == 0) {
                 break;
             }
@@ -269,7 +280,7 @@ public class GameSettings {
 
             Value settingValue = settings.get(settingKey);
             while (true) {
-                String newValue = ActionInput.promptInput("Current value: '" + settingValue.getStringVal() + "'\nWhat new value do you want to set (empty to cancel)? ").strip().toLowerCase();
+                String newValue = ActionInput.promptInput("Current value: '" + settingValue.getStringVal() + "'\nWhat new value do you want to set (empty to cancel)? ").strip();
 
                 if (newValue.length() == 0) {
                     break;
@@ -309,11 +320,8 @@ public class GameSettings {
         ColoredString.Color groupColor = ColoredString.Color.YELLOW;
         ColoredString.Color bindKeyColor = ColoredString.Color.BLUE;
 
-        LinkedHashMap<String, String> groups = new LinkedHashMap<>();
-
-        groups.put("binds", "");
-        groups.put("cards", "");
         groups.put("other", "");
+        groups.replaceAll((k, v) -> "");
 
         for (Map.Entry<String, Value> entry : settings.entrySet()) {
             String[] splitKey = entry.getKey().split("/");
