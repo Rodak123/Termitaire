@@ -110,7 +110,7 @@ public class Game {
         if (!selectedCardsPileSource.empty()) {
             selectedCardsPileSource.peek().show();
             if (selectedCardPilePlace == SelectablePlace.TABLEAU) {
-                statistics.getScoreCounter().cardTurnedUpInATableau();
+                statistics.getScoreCounter().addScoreByScoringMap("cardTurnedUpInATableau");
             }
         }
         selectedCardsPileSource = null;
@@ -284,11 +284,11 @@ public class Game {
                     switch (option) {
                         case SingleDraw -> {
                             if (statistics.getRedealCount() == 0) break;
-                            statistics.getScoreCounter().passedThroughDeckAfterOnePass();
+                            statistics.getScoreCounter().addScoreByScoringMap("passedThroughDeckAfterOnePass");
                         }
                         case TripleDraw -> {
                             if (statistics.getRedealCount() < 3) break;
-                            statistics.getScoreCounter().passedThroughDeckAfterThreePasses();
+                            statistics.getScoreCounter().addScoreByScoringMap("passedThroughDeckAfterThreePasses");
                         }
                     }
 
@@ -321,7 +321,7 @@ public class Game {
                     Card card = selectedCardsPile.get(0);
                     if (Card.canCardStack(base, card, Card.CardStackRuleset.FOUNDATION)) {
                         addSelectedCardsToStack(foundation);
-                        statistics.getScoreCounter().cardMovedToAFoundation();
+                        statistics.getScoreCounter().addScoreByScoringMap("cardMovedToAFoundation");
                     } else {
                         if (base == null) {
                             System.out.println(card + " is not a foundation starter");
@@ -459,15 +459,17 @@ public class Game {
                     Card base = column.empty() ? null : column.peek();
                     Card card = selectedCardsPile.get(0);
                     if (Card.canCardStack(base, card, Card.CardStackRuleset.TABLEAU)) {
-                        addSelectedCardsToStack(column);
                         switch (selectedCardPilePlace) {
-                            case WASTE -> statistics.getScoreCounter().cardMovedFromWasteToTableau();
+                            case WASTE ->
+                                    statistics.getScoreCounter().addScoreByScoringMap("cardMovedFromWasteToTableau");
                             case TABLEAU -> {
                                 if (selectedCardsPileSource == column) break;
-                                statistics.getScoreCounter().cardMovedBetweenTableauStacks();
+                                statistics.getScoreCounter().addScoreByScoringMap("cardMovedBetweenTableauStacks");
                             }
-                            case FOUNDATION -> statistics.getScoreCounter().cardMovedFromAFoundationToTableau();
+                            case FOUNDATION ->
+                                    statistics.getScoreCounter().addScoreByScoringMap("cardMovedFromAFoundationToTableau");
                         }
+                        addSelectedCardsToStack(column);
                     } else {
                         if (base == null) {
                             System.out.println(card + " is not a tableau column starter");

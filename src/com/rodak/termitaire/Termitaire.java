@@ -19,20 +19,26 @@ public class Termitaire {
     private static final String AUTHOR_URL = "https://www.therodak.online/";
     private static final String VERSION = "1.0";
 
+    private static final HashMap<String, Path> paths = new HashMap<>();
+
     public static Game game;
 
     public static void main(String[] args) {
         checkJavaVersion();
 
-        GameBinds.loadBindsFromFile();
+        paths.put("help", Paths.get("resources", "data/help.txt"));
+        paths.put("binds", Paths.get("resources", "data/binds.yaml"));
+
+        GameBinds.loadBindsFromFile(paths.get("binds"));
 
         clearScreen();
         printTitle();
         System.out.println();
         System.out.println(String.join("\n", new String[]{
                 "Todo:",
+                "- Undo",
                 "- Saving game + Loading saves",
-                "- Sound?",
+                "- Sound",
                 "- Change binds from app"
         }));
         System.out.println();
@@ -91,6 +97,25 @@ public class Termitaire {
                     return "Quit the game";
                 }
             });
+
+            actionInput.addAction(new Action() {
+                @Override
+                public void execute(String key, int index) {
+                    System.out.println("UNDO");
+                    game.getStatistics().getScoreCounter().addScoreByScoringMap("didAnUndo");
+                }
+
+                @Override
+                public String[] getCommands() {
+                    return new String[]{"undo"};
+                }
+
+                @Override
+                public String getInfo() {
+                    return "Undoes the last action";
+                }
+            });
+
             if (!game.isPlaying()) {
                 addPausedActions(actionInput);
             }
@@ -130,34 +155,40 @@ public class Termitaire {
                     ranks[i] = Card.Rank.values()[i].getShortName();
                 }
 
-                Path filePath = Paths.get("resources", "help.txt");
-
-                try (Stream<String> lines = Files.lines(filePath)) {
+                try (Stream<String> lines = Files.lines(paths.get("help"))) {
                     String helpText = lines.collect(Collectors.joining(System.lineSeparator()));
 
                     HashMap<String, String> vars = new HashMap<>();
 
                     for (ColoredString.Color color : ColoredString.Color.values()) {
-                        vars.put("_" + color.name().toUpperCase() + "_", color.toString());
+                        vars.put(color.name().toUpperCase(), color.toString());
                     }
-                    vars.put("_CTITLE_", titleColor.toString());
-                    vars.put("_CPLACE_", placeColor.toString());
-                    vars.put("_SUITS_",
+                    vars.put("CTITLE", titleColor.toString());
+                    vars.put("CPLACE", placeColor.toString());
+                    vars.put("SUITS",
                             ColoredString.colorizeString(Card.Suit.SPADES.getShortName(), Card.BLACK) + " (for spades), " +
                                     ColoredString.colorizeString(Card.Suit.HEARTS.getShortName(), Card.RED) + " (for hearts), " +
                                     ColoredString.colorizeString(Card.Suit.CLUBS.getShortName(), Card.BLACK) + " (for clubs), " +
                                     ColoredString.colorizeString(Card.Suit.DIAMONDS.getShortName(), Card.RED) + " (for diamonds)"
                     );
-                    vars.put("_RANKS_", String.join(", ", ranks));
-                    vars.put("_CARD-EXAMPLE_", Card.Suit.HEARTS.getShortName() + " " + Card.Rank.FIVE.getShortName());
+                    vars.put("RANKS", String.join(", ", ranks));
+                    vars.put("CARD-EXAMPLE", Card.Suit.HEARTS.getShortName() + " " + Card.Rank.FIVE.getShortName());
 
+                    for (Map.Entry<String, Integer> entry : game.getStatistics().getScoreCounter().scoringMap.entrySet()) {
+                        int value = entry.getValue();
+                        ColoredString.Color color = value < 0 ? ColoredString.Color.RED : ColoredString.Color.GREEN;
+                        String formattedValue = (value >= 0 ? " " : "") + color.toString() + value + ColoredString.Color.RESET;
+                        vars.put(entry.getKey(), formattedValue);
+                    }
+
+                    String specialSeparator = "_";
                     for (Map.Entry<String, String> entry : vars.entrySet()) {
-                        helpText = helpText.replaceAll(entry.getKey().toUpperCase(), entry.getValue());
+                        helpText = helpText.replaceAll(specialSeparator + entry.getKey().toUpperCase() + specialSeparator, entry.getValue());
                     }
 
                     System.out.println(helpText);
                 } catch (IOException e) {
-                    System.out.println("Did not find '" + ColoredString.colorizeString("help.txt", ColoredString.Color.RED) + "'");
+                    System.out.println("Did not find '" + ColoredString.colorizeString("data/help.txt", ColoredString.Color.RED) + "'");
                 }
             }
 

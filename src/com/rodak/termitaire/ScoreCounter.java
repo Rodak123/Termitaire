@@ -1,8 +1,25 @@
 package com.rodak.termitaire;
 
+import java.util.HashMap;
+
 public class ScoreCounter {
 
+    public final HashMap<String, Integer> scoringMap = new HashMap<>();
+
     private int score;
+
+    public ScoreCounter() {
+        scoringMap.put("cardMovedToAFoundation", 10);
+        scoringMap.put("cardMovedFromWasteToTableau", 5);
+        scoringMap.put("cardTurnedUpInATableau", 5);
+        scoringMap.put("cardMovedBetweenTableauStacks", 3);
+
+        scoringMap.put("tenSecondsElapsed", -2);
+        scoringMap.put("cardMovedFromAFoundationToTableau", -15);
+        scoringMap.put("passedThroughDeckAfterThreePasses", -20);
+        scoringMap.put("passedThroughDeckAfterOnePass", -100);
+        scoringMap.put("didAnUndo", -10);
+    }
 
     private void changeScore(int scoreDelta) {
         score = Math.max(0, score + scoreDelta);
@@ -13,35 +30,20 @@ public class ScoreCounter {
     }
 
     public int getScore(int secondsElapsed) {
-        int tenSecondPenalty = (secondsElapsed / 10) * -2;
+        int tenSecondPenalty = (secondsElapsed / 10) * getScoreDelta("tenSecondsElapsed");
         return score + tenSecondPenalty;
     }
 
-    public void cardMovedToAFoundation() {
-        changeScore(10);
+    public int getScoreDelta(String action) {
+        int scoreDelta = scoringMap.getOrDefault(action, 0);
+        if (scoreDelta == 0) {
+            System.out.println("Undefined action: " + action);
+        }
+        return scoreDelta;
     }
 
-    public void cardMovedFromWasteToTableau() {
-        changeScore(5);
+    public void addScoreByScoringMap(String action) {
+        changeScore(getScoreDelta(action));
     }
 
-    public void cardTurnedUpInATableau() {
-        changeScore(5);
-    }
-
-    public void cardMovedBetweenTableauStacks() {
-        changeScore(3);
-    }
-
-    public void cardMovedFromAFoundationToTableau() {
-        changeScore(-15);
-    }
-
-    public void passedThroughDeckAfterThreePasses() {
-        changeScore(-20);
-    }
-
-    public void passedThroughDeckAfterOnePass() {
-        changeScore(-100);
-    }
 }

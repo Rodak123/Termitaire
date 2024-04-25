@@ -21,12 +21,12 @@ _CTITLE_Controls_RESET_
   _CPLACE_3)_RESET_ Type the card's SUIT and RANK. For example to select FIVE of HEARTS: '_RED__CARD-EXAMPLE__RESET_' (Not case sensitive)
 
 _CTITLE_Scoring_RESET_
- _GREEN_10_RESET_ points for each card moved to a foundation stack.
- _GREEN_5_RESET_ points for each card moved from the waste to a tableau stack.
- _GREEN_5_RESET_ points for each card turned face-up in a tableau stack.
- _GREEN_3_RESET_ points for each card moved from one tableau stack to another.
- _RED_-2_RESET_ points for each 10 seconds elapsed during a timed game. (Evaluated after completion)
- _RED_-15_RESET_ points for each card moved from a foundation stack to a tableau stack.
- _RED_-20_RESET_ points for each pass through the stock after four passes (Draw Three option).
- _RED_-100_RESET_ points for each pass through the stock after one pass (Draw One option).
+ _CARDMOVEDTOAFOUNDATION_ points for each card moved to a foundation stack.
+ _CARDMOVEDFROMWASTETOTABLEAU_ points for each card moved from the waste to a tableau stack.
+ _CARDTURNEDUPINATABLEAU_ points for each card turned face-up in a tableau stack.
+ _CARDMOVEDBETWEENTABLEAUSTACKS_ points for each card moved from one tableau stack to another.
+ _TENSECONDSELAPSED_ points for each 10 seconds elapsed during a timed game. (Evaluated after completion)
+ _CARDMOVEDFROMAFOUNDATIONTOTABLEAU_ points for each card moved from a foundation stack to a tableau stack.
+ _PASSEDTHROUGHDECKAFTERTHREEPASSES_ points for each pass through the stock after four passes (Draw Three option).
+ _PASSEDTHROUGHDECKAFTERONEPASS_ points for each pass through the stock after one pass (Draw One option).
  You receive a _GREEN_bonus_RESET_ when you complete a timed game. The shorter the game, the larger the bonus.
