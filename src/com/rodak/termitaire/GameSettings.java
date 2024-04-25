@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ public class GameSettings {
     public enum ValueType {
         STRING,
         INT,
+        DOUBLE,
         BOOLEAN
     }
 
@@ -36,32 +38,44 @@ public class GameSettings {
 
         private String stringVal;
 
-        public Value(int value) {
-            this(ValueType.INT);
+        private double min, max;
+
+        public Value(int value, int min, int max) {
+            this(ValueType.INT, min, max);
             setValue(value);
         }
 
         public Value(boolean value) {
-            this(ValueType.BOOLEAN);
+            this(ValueType.BOOLEAN, 0, 1);
+            setValue(value);
+        }
+
+        public Value(double value, double min, double max) {
+            this(ValueType.DOUBLE, min, max);
+            setValue(value);
+        }
+
+        public Value(String value, int min, int max) {
+            this(ValueType.STRING, min, max);
             setValue(value);
         }
 
         public Value(String value) {
-            this(ValueType.STRING);
+            this(ValueType.STRING, -1, -1);
             setValue(value);
         }
 
-        private Value(ValueType type) {
+        private Value(ValueType type, double min, double max) {
             this.type = type;
+            this.min = min;
+            this.max = max;
         }
 
-        public static Value getValue(String type, String value) {
-            for (ValueType valueType : ValueType.values()) {
-                if (type.equalsIgnoreCase(valueType.name())) {
-                    Value valueObject = new Value(valueType);
-                    valueObject.setValue(value);
-                    return valueObject;
-                }
+        public static Value getValue(String type, String value, Value target) {
+            if (type.equalsIgnoreCase(target.type.name())) {
+                Value valueObject = new Value(target.type, target.min, target.max);
+                valueObject.setValue(value);
+                return valueObject;
             }
             return null;
         }
@@ -69,21 +83,51 @@ public class GameSettings {
         public boolean isSameType(String value) {
             return switch (type) {
                 case STRING -> value.length() > 0;
-                case INT -> isInteger(value, 10);
+                case INT -> isPositiveInteger(value);
                 case BOOLEAN -> "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
+                case DOUBLE -> isDouble(value);
             };
         }
 
-        private static boolean isInteger(String s, int radix) {
-            if (s.isEmpty()) return false;
-            for (int i = 0; i < s.length(); i++) {
-                if (i == 0 && s.charAt(i) == '-') {
-                    if (s.length() == 1) return false;
-                    else continue;
+        public boolean isValid(String value) {
+            switch (type) {
+                case STRING -> {
+                    return value.length() >= min && (value.length() <= max || max == -1);
                 }
-                if (Character.digit(s.charAt(i), radix) < 0) return false;
+                case INT -> {
+                    int intVal = Integer.parseInt(value);
+                    return (intVal >= min || min == -1) && (intVal <= max || max == -1);
+                }
+                case DOUBLE -> {
+                    double doubleVal = Double.parseDouble(value);
+                    return (doubleVal >= min || min == -1) && (doubleVal <= max || max == -1);
+                }
+                case BOOLEAN -> {
+                    return true;
+                }
             }
-            return true;
+            return false;
+        }
+
+        public String format(String value) {
+            return String.valueOf(switch (type) {
+                case STRING -> value;
+                case INT -> Integer.valueOf(value);
+                case DOUBLE -> Double.valueOf(value);
+                case BOOLEAN -> Boolean.valueOf(value);
+            });
+        }
+
+        private static boolean isDouble(String value) {
+            if (value.isEmpty()) return false;
+            String decimalPattern = "([0-9]*)(\\.([0-9]*))?";
+            return Pattern.matches(decimalPattern, value);
+        }
+
+        private static boolean isPositiveInteger(String value) {
+            if (value.isEmpty()) return false;
+            String decimalPattern = "([0-9]+)";
+            return Pattern.matches(decimalPattern, value);
         }
 
         public void setValue(String value) {
@@ -92,6 +136,10 @@ public class GameSettings {
                 return;
             }
             stringVal = value;
+        }
+
+        public void setValue(double value) {
+            setValue(String.valueOf(value));
         }
 
         public void setValue(int value) {
@@ -117,6 +165,19 @@ public class GameSettings {
         public boolean getBoolVal() {
             return Boolean.parseBoolean(stringVal);
         }
+
+        public double getDoubleVal() {
+            return Double.parseDouble(stringVal);
+        }
+
+        public ColoredString.Color getColor() {
+            return switch (type) {
+                case STRING -> ColoredString.Color.WHITE;
+                case INT -> ColoredString.Color.PURPLE;
+                case DOUBLE -> ColoredString.Color.CYAN;
+                case BOOLEAN -> getBoolVal() ? ColoredString.Color.GREEN : ColoredString.Color.RED;
+            };
+        }
     }
 
     public static final String SETTINGS_FILE_NAME = Termitaire.NAME.toLowerCase() + "_settings.txt";
@@ -128,18 +189,24 @@ public class GameSettings {
 
         settings.put("binds/waste", new Value(String.join(" ", GameBinds.Waste)));
         settings.put("binds/stock", new Value(String.join(" ", GameBinds.Stock)));
-        settings.put("binds/tableau", new Value(String.join(" ", GameBinds.Tableau)));
-        settings.put("binds/foundations", new Value(String.join(" ", GameBinds.Foundations)));
+        settings.put("binds/tableau", new Value(String.join(" ", GameBinds.Tableau), 14, 14));
+        settings.put("binds/foundations", new Value(String.join(" ", GameBinds.Foundations), 8, 8));
         settings.put("binds/unselect", new Value(String.join(" ", GameBinds.Unselect)));
 
         settings.put("cards/spades", new Value("x"));
         settings.put("cards/hearts", new Value("V"));
         settings.put("cards/clubs", new Value("o"));
         settings.put("cards/diamonds", new Value("^"));
+
+        settings.put("audio/mute", new Value(false));
+        settings.put("audio/volume", new Value(1.0, 0, 1));
     }
 
     public void loadSettings() {
         Path path = getSettingsPath();
+        if (path == null) {
+            return;
+        }
 
         HashMap<String, Value> loadedSettings = new HashMap<>();
         try (Stream<String> lines = Files.lines(path)) {
@@ -149,7 +216,7 @@ public class GameSettings {
                     String type = parts[0];
                     String key = parts[1];
                     String value = parts[2];
-                    Value valueObject = Value.getValue(type, value);
+                    Value valueObject = Value.getValue(type, value, settings.get(key));
                     if (valueObject == null) {
                         System.out.println("Setting '" + key + "' can't be read and is ignored");
                     } else {
@@ -203,20 +270,31 @@ public class GameSettings {
             }
 
             if (!settings.containsKey(settingKey)) {
-                System.out.println("Key: " + settingKey + " does not exist");
+                System.out.println("Setting: '" + settingKey + "' does not exist");
                 continue;
             }
 
             Value settingValue = settings.get(settingKey);
             while (true) {
-                String newValue = ActionInput.promptInput("What new value do you want to set? ").strip().toLowerCase();
+                String newValue = ActionInput.promptInput("Current value: '" + settingValue.getStringVal() + "'\nWhat new value do you want to set (empty to cancel)? ").strip().toLowerCase();
 
-                if (settingValue.isSameType(newValue)) {
-                    settingValue.setValue(newValue);
-                    changedSettings = true;
+                if (newValue.length() == 0) {
                     break;
                 }
-                System.out.println("Can't set '" + settingKey + "' to '" + newValue + "', " + settingValue.type.toString() + " is expected");
+
+                if (!settingValue.isSameType(newValue)) {
+                    System.out.println("Can't set '" + settingKey + "' to '" + newValue + "', " + settingValue.type.toString() + " is expected");
+                    continue;
+                }
+
+                if (!settingValue.isValid(newValue)) {
+                    System.out.println("Can't set '" + settingKey + "' to '" + newValue + "', '" + newValue + "' is not valid (min: '" + settingValue.min + "', max: '" + settingValue.max + "')");
+                    continue;
+                }
+
+                settingValue.setValue(settingValue.format(newValue));
+                changedSettings = true;
+                break;
             }
         }
 
@@ -247,8 +325,11 @@ public class GameSettings {
         for (Map.Entry<String, Value> entry : settings.entrySet()) {
             String[] splitKey = entry.getKey().split("/");
             if (splitKey.length < 2) continue;
+
+            Value value = entry.getValue();
+
             String group = splitKey[0];
-            String prettyEntry = "\n " + ColoredString.colorizeString(entry.getKey(), bindKeyColor) + ": " + entry.getValue().getStringVal();
+            String prettyEntry = "\n " + ColoredString.colorizeString(entry.getKey(), bindKeyColor) + ": " + ColoredString.colorizeString(value.getStringVal(), value.getColor());
 
             String groupValue = groups.getOrDefault(group, null);
             if (groupValue != null) {

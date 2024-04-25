@@ -16,6 +16,7 @@ public class Game {
 
     private boolean playing;
     private boolean started;
+    private boolean won;
     private GameOption option;
 
     private GameStatistics statistics = new GameStatistics();
@@ -41,6 +42,10 @@ public class Game {
     public boolean didWin() {
         for (Stack<Card> foundation : foundations) {
             if (foundation.size() < Card.Rank.values().length) return false;
+        }
+        if (!won) {
+            won = true;
+            Termitaire.soundManager.play(SoundManager.Sound.Victory);
         }
         return true;
     }
@@ -115,6 +120,8 @@ public class Game {
         }
         selectedCardsPileSource = null;
         selectedCardPilePlace = null;
+
+        Termitaire.soundManager.play(SoundManager.Sound.CardDown);
     }
 
     public List<Action> getActions() {
@@ -135,6 +142,8 @@ public class Game {
                         selectedCardsPile.clear();
                         selectedCardsPileSource = null;
                         selectedCardPilePlace = null;
+
+                        Termitaire.soundManager.play(SoundManager.Sound.CardDown);
                     }
 
                     @Override
@@ -255,6 +264,7 @@ public class Game {
                     }
 
                     statistics.didADraw();
+                    Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                 }
 
                 @Override
@@ -279,6 +289,7 @@ public class Game {
                     for (Card card : stock) {
                         card.hide();
                     }
+                    Termitaire.soundManager.play(SoundManager.Sound.ShuffleStock);
                     Collections.shuffle(stock);
 
                     switch (option) {
@@ -357,6 +368,7 @@ public class Game {
                     selectedCardsPile.add(foundation.pop());
                     selectedCardsPileSource = foundation;
                     selectedCardPilePlace = SelectablePlace.FOUNDATION;
+                    Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                 }
 
                 @Override
@@ -433,6 +445,7 @@ public class Game {
                     if (column.size() != initialSize) {
                         selectedCardsPileSource = column;
                         selectedCardPilePlace = SelectablePlace.TABLEAU;
+                        Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                     }
                 }
 
@@ -503,6 +516,7 @@ public class Game {
                     selectedCardsPile.add(waste.pop());
                     selectedCardsPileSource = waste;
                     selectedCardPilePlace = SelectablePlace.WASTE;
+                    Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                 }
 
                 @Override

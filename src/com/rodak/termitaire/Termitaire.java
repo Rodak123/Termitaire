@@ -22,11 +22,15 @@ public class Termitaire {
     private static final HashMap<String, Path> paths = new HashMap<>();
 
     public static Game game;
+    public static SoundManager soundManager;
 
     public static void main(String[] args) {
         checkJavaVersion();
 
         paths.put("help", Paths.get("resources", "/data/help.txt"));
+        paths.put("soundsFolder", Paths.get("resources", "/sfx"));
+
+        soundManager = new SoundManager(paths.get("soundsFolder"), ".wav");
 
         clearScreen();
         printTitle();
@@ -109,6 +113,7 @@ public class Termitaire {
 
         System.out.println("Goodbye");
         actionInput.dispose();
+        soundManager.dispose();
     }
 
     private static void addPausedActions(ActionInput actionInput) {
