@@ -13,11 +13,11 @@ public class Termitaire {
 
     private static final int MIN_JAVA_MAJOR = 17;
 
-    private static final String NAME = "Termitaire";
-    private static final String DESCRIPTION = "Text-based solitaire.";
-    private static final String AUTHOR = "Radek Titěra";
-    private static final String AUTHOR_URL = "https://www.therodak.online/";
-    private static final String VERSION = "1.0";
+    public static final String NAME = "Termitaire";
+    public static final String DESCRIPTION = "Text-based solitaire.";
+    public static final String AUTHOR = "Radek Titěra";
+    public static final String AUTHOR_URL = "https://www.therodak.online/";
+    public static final String VERSION = "1.0";
 
     private static final HashMap<String, Path> paths = new HashMap<>();
 
@@ -26,8 +26,7 @@ public class Termitaire {
     public static void main(String[] args) {
         checkJavaVersion();
 
-        paths.put("help", Paths.get("resources", "data/help.txt"));
-        paths.put("settings", Paths.get("resources", "data/settings.txt"));
+        paths.put("help", Paths.get("resources", "/data/help.txt"));
 
         clearScreen();
         printTitle();
@@ -61,8 +60,8 @@ public class Termitaire {
         System.out.println();
     }
 
-    public static void onSettingsUpdated() {
-        GameSettings.getInstance().storeSettings(paths.get("settings"));
+    public static void onSettingsUpdated(boolean write) {
+        if (write) GameSettings.getInstance().storeSettings();
         GameBinds.loadBindsFromSettings();
     }
 
@@ -71,8 +70,8 @@ public class Termitaire {
 
         ActionInput actionInput = new ActionInput();
 
-        GameSettings.getInstance().loadSettings(paths.get("settings"));
-        onSettingsUpdated();
+        GameSettings.getInstance().loadSettings();
+        onSettingsUpdated(false);
 
         game = new Game();
         ConsoleCanvas canvas = GamePlotter.createFittingCanvas(game);

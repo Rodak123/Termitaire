@@ -1,8 +1,10 @@
 package com.rodak.termitaire;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -117,6 +119,8 @@ public class GameSettings {
         }
     }
 
+    public static final String SETTINGS_FILE_NAME = Termitaire.NAME.toLowerCase() + "_settings.txt";
+
     private final HashMap<String, Value> settings;
 
     public GameSettings() {
@@ -134,7 +138,9 @@ public class GameSettings {
         settings.put("cards/diamonds", new Value("^"));
     }
 
-    public void loadSettings(Path path) {
+    public void loadSettings() {
+        Path path = getSettingsPath();
+
         HashMap<String, Value> loadedSettings = new HashMap<>();
         try (Stream<String> lines = Files.lines(path)) {
             lines.forEach(line -> {
@@ -152,21 +158,41 @@ public class GameSettings {
                 }
             });
         } catch (IOException e) {
-            storeSettings(path);
+            storeSettings();
         }
-
         settings.putAll(loadedSettings);
     }
 
-    public void storeSettings(Path path) {
+    private Path getSettingsPath() {
         try {
-            Files.write(path, this.toString().getBytes());
+            Path path = Path.of(Termitaire.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+            if (path == null) {
+                System.out.println("Can't access folder this application is in, therefore can't store settings");
+                return null;
+            }
+            return path.resolve(SETTINGS_FILE_NAME);
+
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public void storeSettings() {
+        Path path = getSettingsPath();
+        if (path == null) {
+            return;
+        }
+        try (OutputStream outputStream = new FileOutputStream(path.toFile())) {
+            outputStream.write(this.toString().getBytes());
         } catch (IOException e) {
+            e.printStackTrace();
             System.err.println("Can't access '" + ColoredString.colorizeString(path.getFileName().toString(), ColoredString.Color.RED) + "'");
         }
     }
 
     public void changeSettings() {
+        boolean changedSettings = false;
         while (true) {
             Termitaire.clearScreen();
             listAllSettings();
@@ -187,21 +213,25 @@ public class GameSettings {
 
                 if (settingValue.isSameType(newValue)) {
                     settingValue.setValue(newValue);
+                    changedSettings = true;
                     break;
                 }
                 System.out.println("Can't set '" + settingKey + "' to '" + newValue + "', " + settingValue.type.toString() + " is expected");
             }
         }
 
-        String input = ActionInput.promptInput("Save settings(Y/n)? ").strip().toLowerCase();
+        if (!changedSettings) {
+            System.out.println("Settings not modified.");
+            return;
+        }
 
+        String input = ActionInput.promptInput("Save settings(Y/n)? ").strip().toLowerCase();
         if (input.length() == 0 || input.equals("y")) {
             System.out.println("Settings saved.");
-            Termitaire.onSettingsUpdated();
+            Termitaire.onSettingsUpdated(true);
         } else {
             System.out.println("Settings not modified.");
         }
-
     }
 
     private void listAllSettings() {
@@ -228,6 +258,7 @@ public class GameSettings {
             }
         }
 
+        System.out.println();
         for (Map.Entry<String, String> entry : groups.entrySet()) {
             if (entry.getValue().length() == 0) continue;
             String groupName = entry.getKey().substring(0, 1).toUpperCase() + entry.getKey().substring(1);

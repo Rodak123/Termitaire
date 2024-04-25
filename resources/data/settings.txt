@@ -1,9 +1,0 @@
-STRING|binds/foundations|q w e r
-STRING|cards/spades|x
-STRING|cards/hearts|V
-STRING|cards/diamonds|^
-STRING|binds/waste|o
-STRING|binds/tableau|a s d f j k l
-STRING|binds/stock|p
-STRING|binds/unselect|_
-STRING|cards/clubs|o
