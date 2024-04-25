@@ -1,11 +1,5 @@
 package com.rodak.termitaire;
 
-import org.yaml.snakeyaml.Yaml;
-
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.Map;
-
 
 public class GameBinds {
     public static String[] Waste = new String[]{"o"};
@@ -15,31 +9,44 @@ public class GameBinds {
     public static String[] Unselect = new String[]{"_"};
 
 
-    public static void loadBindsFromFile(Path path) {
-        try (InputStream inputStream = GameBinds.class.getResourceAsStream(path.toString())) {
-            if (inputStream != null) {
-                Yaml yaml = new Yaml();
-                Map<String, String> data = yaml.load(inputStream);
+    public static void loadBindsFromSettings() {
+        GameSettings settings = GameSettings.getInstance();
 
-                if (data != null) {
-                    Waste = getBinds("Waste", data, Waste);
-                    Stock = getBinds("Stock", data, Stock);
-                    Tableau = getBinds("Tableau", data, Tableau);
-                    Foundations = getBinds("Foundations", data, Foundations);
-                    Unselect = getBinds("Unselect", data, Unselect);
-                }
-            } else {
-                System.out.println("Failed to load binds.yaml. Make sure it exists in the resources data folder.");
-            }
-        } catch (Exception e) {
-            System.err.println("Error loading binds.yaml: " + e.getMessage());
+        String[] binds;
+
+        binds = settings.getSetting("binds/waste").getStringVal().split(" ");
+        if (binds.length > 0) {
+            Waste = binds;
+        } else {
+            System.out.println("Waste binds are not valid, must have at least one");
+        }
+
+        binds = settings.getSetting("binds/stock").getStringVal().split(" ");
+        if (binds.length > 0) {
+            Stock = binds;
+        } else {
+            System.out.println("Stock binds are not valid, must have at least one");
+        }
+
+        binds = settings.getSetting("binds/tableau").getStringVal().split(" ");
+        if (binds.length == Tableau.length) {
+            Tableau = binds;
+        } else {
+            System.out.println("Tableau binds are not valid, must have exactly " + Tableau.length);
+        }
+
+        binds = settings.getSetting("binds/foundations").getStringVal().split(" ");
+        if (binds.length == Foundations.length) {
+            Foundations = binds;
+        } else {
+            System.out.println("Foundations binds are not valid, must have exactly " + Foundations.length);
+        }
+
+        binds = settings.getSetting("binds/unselect").getStringVal().split(" ");
+        if (binds.length > 0) {
+            Unselect = binds;
+        } else {
+            System.out.println("Unselect binds are not valid, must have at least one");
         }
     }
-
-    private static String[] getBinds(String key, Map<String, String> data, String[] defaultBinds) {
-        if (data.containsKey(key))
-            return data.get(key).strip().split(" ");
-        return defaultBinds;
-    }
-
 }

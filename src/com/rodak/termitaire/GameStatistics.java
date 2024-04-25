@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 public class GameStatistics {
 
     private static int attempts;
-    private int moves, draws, redeals, cardFlips, keystrokes;
+    private int moves, draws, redeals, cardFlips, keystrokes, undoes;
 
     private final ScoreCounter scoreCounter;
     private final Instant startTime;
@@ -37,6 +37,10 @@ public class GameStatistics {
 
     public void didACardFlip() {
         cardFlips++;
+    }
+
+    public void didAnUndo() {
+        undoes++;
     }
 
     public void pressedKeys(int amount) {
@@ -79,6 +83,7 @@ public class GameStatistics {
         stats.put("Score", String.valueOf(scoreCounter.getScore((int) gameDuration.getSeconds())));
         stats.put("Time", getFormattedGameTime());
         stats.put("Attempts", String.valueOf(attempts));
+        stats.put("Undoes", String.valueOf(undoes));
 
         stats.put("Moves", String.valueOf(moves));
         stats.put("Draws", String.valueOf(draws));

@@ -18,7 +18,7 @@ public class ScoreCounter {
         scoringMap.put("cardMovedFromAFoundationToTableau", -15);
         scoringMap.put("passedThroughDeckAfterThreePasses", -20);
         scoringMap.put("passedThroughDeckAfterOnePass", -100);
-        scoringMap.put("didAnUndo", -10);
+        scoringMap.put("didAnUndo", -15);
     }
 
     private void changeScore(int scoreDelta) {

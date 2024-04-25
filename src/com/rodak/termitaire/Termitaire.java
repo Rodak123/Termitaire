@@ -27,19 +27,18 @@ public class Termitaire {
         checkJavaVersion();
 
         paths.put("help", Paths.get("resources", "data/help.txt"));
-        paths.put("binds", Paths.get("resources", "data/binds.yaml"));
+        paths.put("settings", Paths.get("resources", "data/settings.txt"));
 
-        GameBinds.loadBindsFromFile(paths.get("binds"));
+//        GameBinds.loadBindsFromFile(paths.get("binds"));
 
         clearScreen();
         printTitle();
         System.out.println();
         System.out.println(String.join("\n", new String[]{
                 "Todo:",
-                "- Undo",
-                "- Saving game + Loading saves",
+                "- Change binds from app",
                 "- Sound",
-                "- Change binds from app"
+                "- Saving game + Loading saves",
         }));
         System.out.println();
 
@@ -65,10 +64,18 @@ public class Termitaire {
         System.out.println();
     }
 
+    public static void onSettingsUpdated() {
+        GameSettings.getInstance().storeSettings(paths.get("settings"));
+        GameBinds.loadBindsFromSettings();
+    }
+
     private static void runGame() {
         running = true;
 
         ActionInput actionInput = new ActionInput();
+
+        GameSettings.getInstance().loadSettings(paths.get("settings"));
+        onSettingsUpdated();
 
         game = new Game();
         ConsoleCanvas canvas = GamePlotter.createFittingCanvas(game);
@@ -95,24 +102,6 @@ public class Termitaire {
                 @Override
                 public String getInfo() {
                     return "Quit the game";
-                }
-            });
-
-            actionInput.addAction(new Action() {
-                @Override
-                public void execute(String key, int index) {
-                    System.out.println("UNDO");
-                    game.getStatistics().getScoreCounter().addScoreByScoringMap("didAnUndo");
-                }
-
-                @Override
-                public String[] getCommands() {
-                    return new String[]{"undo"};
-                }
-
-                @Override
-                public String getInfo() {
-                    return "Undoes the last action";
                 }
             });
 
@@ -144,6 +133,24 @@ public class Termitaire {
                 return "Get info about this game";
             }
         });
+
+        actionInput.addAction(new Action() {
+            @Override
+            public void execute(String key, int index) {
+
+            }
+
+            @Override
+            public String[] getCommands() {
+                return new String[]{"settings"};
+            }
+
+            @Override
+            public String getInfo() {
+                return "Change binds and looks";
+            }
+        });
+
         actionInput.addAction(new Action() {
             @Override
             public void execute(String key, int index) {
@@ -155,7 +162,8 @@ public class Termitaire {
                     ranks[i] = Card.Rank.values()[i].getShortName();
                 }
 
-                try (Stream<String> lines = Files.lines(paths.get("help"))) {
+                Path helpPath = paths.get("help");
+                try (Stream<String> lines = Files.lines(helpPath)) {
                     String helpText = lines.collect(Collectors.joining(System.lineSeparator()));
 
                     HashMap<String, String> vars = new HashMap<>();
@@ -177,7 +185,7 @@ public class Termitaire {
                     for (Map.Entry<String, Integer> entry : game.getStatistics().getScoreCounter().scoringMap.entrySet()) {
                         int value = entry.getValue();
                         ColoredString.Color color = value < 0 ? ColoredString.Color.RED : ColoredString.Color.GREEN;
-                        String formattedValue = (value >= 0 ? " " : "") + color.toString() + value + ColoredString.Color.RESET;
+                        String formattedValue = (value >= 0 ? " " : "") + color + value + ColoredString.Color.RESET;
                         vars.put(entry.getKey(), formattedValue);
                     }
 
@@ -188,7 +196,7 @@ public class Termitaire {
 
                     System.out.println(helpText);
                 } catch (IOException e) {
-                    System.out.println("Did not find '" + ColoredString.colorizeString("data/help.txt", ColoredString.Color.RED) + "'");
+                    System.out.println("Did not find '" + ColoredString.colorizeString(helpPath.getFileName().toString(), ColoredString.Color.RED) + "'");
                 }
             }
 

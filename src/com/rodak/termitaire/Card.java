@@ -8,25 +8,20 @@ public class Card {
     public static ColoredString.Color BLACK = ColoredString.Color.BLUE;
 
     public enum Suit {
-        SPADES("x"),
-        HEARTS("v"),
-        CLUBS("o"),
-        DIAMONDS("^"),
-
-//        SPADES("S"),
-//        CLUBS("C"),
-//        HEARTS("H"),
-//        DIAMONDS("D"),
+        SPADES("cards/spades"),
+        HEARTS("cards/hearts"),
+        CLUBS("cards/clubs"),
+        DIAMONDS("cards/diamonds"),
         ;
 
-        private final String shortName;
+        private final String shortNameKey;
 
-        Suit(String shortName) {
-            this.shortName = shortName;
+        Suit(String shortNameKey) {
+            this.shortNameKey = shortNameKey;
         }
 
         public String getShortName() {
-            return shortName;
+            return GameSettings.getInstance().getSetting(shortNameKey).getStringVal();
         }
     }
 
