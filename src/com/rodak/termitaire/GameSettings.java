@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,6 +62,26 @@ public class GameSettings {
                 }
             }
             return null;
+        }
+
+        public boolean isSameType(String value) {
+            return switch (type) {
+                case STRING -> value.length() > 0;
+                case INT -> isInteger(value, 10);
+                case BOOLEAN -> "true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value);
+            };
+        }
+
+        private static boolean isInteger(String s, int radix) {
+            if (s.isEmpty()) return false;
+            for (int i = 0; i < s.length(); i++) {
+                if (i == 0 && s.charAt(i) == '-') {
+                    if (s.length() == 1) return false;
+                    else continue;
+                }
+                if (Character.digit(s.charAt(i), radix) < 0) return false;
+            }
+            return true;
         }
 
         public void setValue(String value) {
@@ -142,6 +163,75 @@ public class GameSettings {
             Files.write(path, this.toString().getBytes());
         } catch (IOException e) {
             System.err.println("Can't access '" + ColoredString.colorizeString(path.getFileName().toString(), ColoredString.Color.RED) + "'");
+        }
+    }
+
+    public void changeSettings() {
+        while (true) {
+            Termitaire.clearScreen();
+            listAllSettings();
+
+            String settingKey = ActionInput.promptInput("What setting do you want to change (type the blue key or nothing to quit)? ").strip().toLowerCase();
+            if (settingKey.length() == 0) {
+                break;
+            }
+
+            if (!settings.containsKey(settingKey)) {
+                System.out.println("Key: " + settingKey + " does not exist");
+                continue;
+            }
+
+            Value settingValue = settings.get(settingKey);
+            while (true) {
+                String newValue = ActionInput.promptInput("What new value do you want to set? ").strip().toLowerCase();
+
+                if (settingValue.isSameType(newValue)) {
+                    settingValue.setValue(newValue);
+                    break;
+                }
+                System.out.println("Can't set '" + settingKey + "' to '" + newValue + "', " + settingValue.type.toString() + " is expected");
+            }
+        }
+
+        String input = ActionInput.promptInput("Save settings(Y/n)? ").strip().toLowerCase();
+
+        if (input.length() == 0 || input.equals("y")) {
+            System.out.println("Settings saved.");
+            Termitaire.onSettingsUpdated();
+        } else {
+            System.out.println("Settings not modified.");
+        }
+
+    }
+
+    private void listAllSettings() {
+        ColoredString.Color groupColor = ColoredString.Color.YELLOW;
+        ColoredString.Color bindKeyColor = ColoredString.Color.BLUE;
+
+        LinkedHashMap<String, String> groups = new LinkedHashMap<>();
+
+        groups.put("binds", "");
+        groups.put("cards", "");
+        groups.put("other", "");
+
+        for (Map.Entry<String, Value> entry : settings.entrySet()) {
+            String[] splitKey = entry.getKey().split("/");
+            if (splitKey.length < 2) continue;
+            String group = splitKey[0];
+            String prettyEntry = "\n " + ColoredString.colorizeString(entry.getKey(), bindKeyColor) + ": " + entry.getValue().getStringVal();
+
+            String groupValue = groups.getOrDefault(group, null);
+            if (groupValue != null) {
+                groups.put(group, groupValue + prettyEntry);
+            } else {
+                groups.put("other", groups.get("other") + prettyEntry);
+            }
+        }
+
+        for (Map.Entry<String, String> entry : groups.entrySet()) {
+            if (entry.getValue().length() == 0) continue;
+            String groupName = entry.getKey().substring(0, 1).toUpperCase() + entry.getKey().substring(1);
+            System.out.println(ColoredString.colorizeString(groupName, groupColor) + entry.getValue() + "\n");
         }
     }
 

@@ -29,14 +29,11 @@ public class Termitaire {
         paths.put("help", Paths.get("resources", "data/help.txt"));
         paths.put("settings", Paths.get("resources", "data/settings.txt"));
 
-//        GameBinds.loadBindsFromFile(paths.get("binds"));
-
         clearScreen();
         printTitle();
         System.out.println();
         System.out.println(String.join("\n", new String[]{
                 "Todo:",
-                "- Change binds from app",
                 "- Sound",
                 "- Saving game + Loading saves",
         }));
@@ -137,7 +134,7 @@ public class Termitaire {
         actionInput.addAction(new Action() {
             @Override
             public void execute(String key, int index) {
-
+                GameSettings.getInstance().changeSettings();
             }
 
             @Override
