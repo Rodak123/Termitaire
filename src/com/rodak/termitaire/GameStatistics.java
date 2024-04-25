@@ -7,13 +7,13 @@ import java.util.LinkedHashMap;
 public class GameStatistics {
 
     private static int attempts;
-    private int moves, draws, redeals, cardFlips, keystrokes, undoes;
+    private int moves, draws, redeals, cardFlips, keystrokes;
 
     private final ScoreCounter scoreCounter;
-    private final Instant startTime;
+    private final Timer timer;
 
     public GameStatistics() {
-        startTime = Instant.now();
+        timer = new Timer();
         attempts++;
 
         scoreCounter = new ScoreCounter();
@@ -39,16 +39,8 @@ public class GameStatistics {
         cardFlips++;
     }
 
-    public void didAnUndo() {
-        undoes++;
-    }
-
     public void pressedKeys(int amount) {
         keystrokes += amount;
-    }
-
-    private Duration getGameDuration() {
-        return Duration.between(startTime, Instant.now());
     }
 
     public String getFormattedGameTime() {
@@ -56,8 +48,7 @@ public class GameStatistics {
     }
 
     public String getFormattedGameTime(boolean showMillis) {
-        Duration gameDuration = getGameDuration();
-        long rawMillis = gameDuration.toMillis();
+        long rawMillis = timer.getTimeElapsed();
 
         String millis = String.format("%03d", rawMillis % 1000);
         String seconds = String.format("%02d", (rawMillis / 1000) % 60);
@@ -68,22 +59,18 @@ public class GameStatistics {
     }
 
     private String getFormattedKPM() {
-        Duration gameDuration = getGameDuration();
-
-        float kpm = keystrokes / (gameDuration.getSeconds() / 60f);
+        float kpm = keystrokes / (timer.getTimeElapsed() / (60f * 1000f));
 
         int rounding = (int) Math.pow(10, 3);
         return String.valueOf(Math.floor(kpm * rounding) / rounding);
     }
 
     public LinkedHashMap<String, String> getAllAndReset() {
-        Duration gameDuration = getGameDuration();
         LinkedHashMap<String, String> stats = new LinkedHashMap<>();
 
-        stats.put("Score", String.valueOf(scoreCounter.getScore((int) gameDuration.getSeconds())));
+        stats.put("Score", String.valueOf(scoreCounter.getScore((int) (timer.getTimeElapsed() / 1000f))));
         stats.put("Time", getFormattedGameTime());
         stats.put("Attempts", String.valueOf(attempts));
-        stats.put("Undoes", String.valueOf(undoes));
 
         stats.put("Moves", String.valueOf(moves));
         stats.put("Draws", String.valueOf(draws));
@@ -99,5 +86,9 @@ public class GameStatistics {
 
     public int getRedealCount() {
         return redeals;
+    }
+
+    public Timer getTimer() {
+        return timer;
     }
 }

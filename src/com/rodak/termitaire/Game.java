@@ -165,6 +165,7 @@ public class Game {
                 @Override
                 public void execute(String key, int index) {
                     playing = false;
+                    statistics.getTimer().pause();
                 }
 
                 @Override
@@ -182,16 +183,17 @@ public class Game {
                 @Override
                 public void execute(String key, int index) {
                     playing = true;
+                    statistics.getTimer().resume();
                 }
 
                 @Override
                 public String[] getCommands() {
-                    return new String[]{"play"};
+                    return new String[]{"resume"};
                 }
 
                 @Override
                 public String getInfo() {
-                    return "Play the paused game";
+                    return "Resume the paused game";
                 }
             });
         }
