@@ -1,5 +1,6 @@
 package com.rodak.termitaire;
 
+import java.net.URISyntaxException;
 import java.nio.file.*;
 import java.io.*;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ public class Termitaire {
     public static final String AUTHOR_URL = "https://www.therodak.online/";
     public static final String VERSION = "1.0";
 
-    private static final HashMap<String, Path> paths = new HashMap<>();
+    private static final HashMap<String, String> paths = new HashMap<>();
 
     public static Game game;
     public static SoundManager soundManager;
@@ -27,20 +28,21 @@ public class Termitaire {
     public static void main(String[] args) {
         checkJavaVersion();
 
-        paths.put("help", Paths.get("resources", "/data/help.txt"));
-        paths.put("soundsFolder", Paths.get("resources", "/sfx"));
+        paths.put("help", "/data/help.txt");
+        paths.put("soundsFolder", "/sfx");
+
+        System.out.println("Loading...");
 
         soundManager = new SoundManager(paths.get("soundsFolder"), ".wav");
 
         clearScreen();
         printTitle();
-        System.out.println();
-        System.out.println(String.join("\n", new String[]{
-                "Todo:",
-                "- Sound",
-                "- Saving game + Loading saves",
-        }));
-        System.out.println();
+//        System.out.println();
+//        System.out.println(String.join("\n", new String[]{
+//                "Todo:",
+//                "- Saving game + Loading saves",
+//        }));
+//        System.out.println();
 
         runGame();
     }
@@ -163,10 +165,9 @@ public class Termitaire {
                     ranks[i] = Card.Rank.values()[i].getShortName();
                 }
 
-                Path helpPath = paths.get("help");
-                try (Stream<String> lines = Files.lines(helpPath)) {
-                    String helpText = lines.collect(Collectors.joining(System.lineSeparator()));
-
+                try (InputStream in = getClass().getResourceAsStream("/data/help.txt");
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+                    String helpText = reader.lines().collect(Collectors.joining(System.lineSeparator()));
                     HashMap<String, String> vars = new HashMap<>();
 
                     for (ColoredString.Color color : ColoredString.Color.values()) {
@@ -197,7 +198,8 @@ public class Termitaire {
 
                     System.out.println(helpText);
                 } catch (IOException e) {
-                    System.out.println("Did not find '" + ColoredString.colorizeString(helpPath.getFileName().toString(), ColoredString.Color.RED) + "'");
+                    e.printStackTrace();
+                    System.out.println("Did not find '" + ColoredString.colorizeString("help.txt", ColoredString.Color.RED) + "'");
                 }
             }
 

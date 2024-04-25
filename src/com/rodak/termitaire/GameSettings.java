@@ -4,13 +4,10 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GameSettings {
@@ -232,15 +229,11 @@ public class GameSettings {
 
     private Path getSettingsPath() {
         try {
-            Path path = Path.of(Termitaire.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
-            if (path == null) {
-                System.out.println("Can't access folder this application is in, therefore can't store settings");
-                return null;
-            }
-            return path.resolve(SETTINGS_FILE_NAME);
-
+            Path path = Path.of(Termitaire.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            return path.getParent().resolve(SETTINGS_FILE_NAME);
         } catch (URISyntaxException e) {
             e.printStackTrace();
+            System.out.println("Can't access the application folder");
             return null;
         }
     }

@@ -1,11 +1,7 @@
 package com.rodak.termitaire;
 
 import javax.sound.sampled.*;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.*;
 
 public class SoundManager {
 
@@ -18,23 +14,19 @@ public class SoundManager {
 
     private final Clip[] clips;
 
-    public SoundManager(Path soundsFolder, String soundsFormat) {
+    public SoundManager(String soundsFolder, String soundsFormat) {
         clips = new Clip[Sound.values().length];
-        for (Sound sound : Sound.values()) {
-            Path clipPath = soundsFolder.resolve(sound.name() + soundsFormat);
-            if (!Files.exists(clipPath)) {
-                System.out.println("Sound '" + clipPath.getFileName().toString() + "' does not exist.");
-                continue;
-            }
 
-            try (final InputStream inputStream = Files.newInputStream(clipPath);
-                 final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        for (Sound sound : Sound.values()) {
+            String clipPath = soundsFolder + "/" + sound.name() + soundsFormat;
+            try (final InputStream in = getClass().getResourceAsStream(clipPath);
+                 final BufferedInputStream bufferedInputStream = new BufferedInputStream(in);
                  final AudioInputStream audioIn = AudioSystem.getAudioInputStream(bufferedInputStream)) {
                 final Clip clip = AudioSystem.getClip();
                 clip.open(audioIn);
                 clips[sound.ordinal()] = clip;
-            } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
-                e.printStackTrace();
+            } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
+                System.out.println("Did not find '" + ColoredString.colorizeString(sound.name() + soundsFormat, ColoredString.Color.RED) + "'");
             }
         }
     }
