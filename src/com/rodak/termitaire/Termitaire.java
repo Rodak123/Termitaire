@@ -28,7 +28,7 @@ public class Termitaire {
     public static final String NAME = "Termitaire";
     public static final String DESCRIPTION = "Text-based solitaire.";
     public static final String AUTHOR = "Radek Titěra";
-    public static final String AUTHOR_URL = "https://www.therodak.online/";
+    public static final String AUTHOR_URL = "https://rodakdev.itch.io/";
     public static final String VERSION = "1.0";
 
     private static final HashMap<String, String> paths = new HashMap<>();
