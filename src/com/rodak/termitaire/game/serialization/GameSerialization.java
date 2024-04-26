@@ -95,7 +95,7 @@ public class GameSerialization {
             game = (Game) in.readObject();
             System.out.println("Game loaded successfully!");
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Can't load game (may be corrupt): " + e.getMessage());
+            System.out.println("Can't load game (may be corrupt or for an older version)");
         }
         return game;
     }

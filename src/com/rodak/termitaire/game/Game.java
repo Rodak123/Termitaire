@@ -4,11 +4,14 @@ import com.rodak.termitaire.game.components.Card;
 import com.rodak.termitaire.game.components.CardPlace;
 import com.rodak.termitaire.Termitaire;
 import com.rodak.termitaire.game.settings.GameOption;
+import com.rodak.termitaire.game.settings.GameSettings;
 import com.rodak.termitaire.input.Action;
 import com.rodak.termitaire.input.ActionInput;
 import com.rodak.termitaire.input.GameBinds;
+import com.rodak.termitaire.ui.ColoredString;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class Game implements Serializable {
@@ -18,6 +21,7 @@ public class Game implements Serializable {
     private final Stack<Card> waste;
     private final Stack<Card> stock;
     public String savePath = null;
+    public String seed = "seed";
 
     private final Stack<Card> selectedCardsPile;
     private CardPlace selectedCardPilePlace;
@@ -50,6 +54,10 @@ public class Game implements Serializable {
     }
 
     public boolean didWin() {
+        if (GameSettings.getInstance().getSetting("gameplay/autoFinish").getBoolVal()) {
+            tryToAutoFinish();
+        }
+
         for (Stack<Card> foundation : foundations) {
             if (foundation.size() < Card.Rank.values().length) return false;
         }
@@ -60,6 +68,40 @@ public class Game implements Serializable {
             Termitaire.soundManager.play(SoundManager.Sound.Victory);
         }
         return true;
+    }
+
+    private void tryToAutoFinish() {
+        if (!waste.empty() || !stock.empty() || !selectedCardsPile.empty()) return;
+        for (Stack<Card> column : tableau) {
+            if (column.stream().anyMatch(Card::isHidden)) {
+                return;
+            }
+        }
+
+        while (tableau.stream().anyMatch(column -> !column.empty())) {
+            for (Stack<Card> column : tableau) {
+                if (column.empty()) continue;
+                Card topCard = column.peek();
+                Stack<Card> cardFoundation = null;
+                for (Stack<Card> foundation : foundations) {
+                    if (foundation.empty()) {
+                        cardFoundation = foundation;
+                        continue;
+                    }
+                    if (foundation.peek().suit == topCard.suit) {
+                        cardFoundation = foundation;
+                        break;
+                    }
+                }
+                assert cardFoundation != null;
+
+                Card foundationBaseCard = cardFoundation.empty() ? null : cardFoundation.peek();
+                if (Card.canCardStack(foundationBaseCard, topCard, Card.CardStackRuleset.FOUNDATION)) {
+                    cardFoundation.add(column.pop());
+                    statistics.getScoreCounter().addScoreByScoringMap("cardMovedToAFoundation");
+                }
+            }
+        }
     }
 
     public void newGame(GameOption option) {
@@ -80,8 +122,14 @@ public class Game implements Serializable {
             cards.clear();
         }
 
+        Long seed = askForSeed();
+
         Stack<Card> cards = Card.allCards();
-        Collections.shuffle(cards);
+        if (seed == null) {
+            Collections.shuffle(cards);
+        } else {
+            Collections.shuffle(cards, new Random(seed));
+        }
 
         for (int i = 0; i < tableau.size(); i++) {
             for (int j = 0; j < 1 + i; j++) {
@@ -91,6 +139,38 @@ public class Game implements Serializable {
         }
 
         stock.addAll(cards);
+    }
+
+    private String getAlphaNumericString() {
+        int n = 256;
+        byte[] array = new byte[256];
+        new Random().nextBytes(array);
+
+        String randomString
+                = new String(array, StandardCharsets.UTF_8);
+
+        StringBuilder r = new StringBuilder();
+        for (int k = 0; k < randomString.length(); k++) {
+
+            char ch = randomString.charAt(k);
+
+            if (((ch >= 'a' && ch <= 'z')
+                    || (ch >= 'A' && ch <= 'Z')
+                    || (ch >= '0' && ch <= '9'))
+                    && (n > 0)) {
+
+                r.append(ch);
+                n--;
+            }
+        }
+        return r.toString();
+    }
+
+    private Long askForSeed() {
+        String seed = ActionInput.promptInput("Select the game seed (empty for random)? ");
+        if (seed.length() == 0) seed = getAlphaNumericString();
+        this.seed = seed;
+        return (long) seed.hashCode();
     }
 
     public List<Stack<Card>> getFoundations() {
@@ -115,6 +195,11 @@ public class Game implements Serializable {
 
     public boolean isPlaying() {
         return playing;
+    }
+
+
+    public boolean isPaused() {
+        return !playing && started;
     }
 
     public GameStatistics getStatistics() {
@@ -179,6 +264,7 @@ public class Game implements Serializable {
                 public void execute(String key, int index) {
                     playing = false;
                     statistics.getTimer().pause();
+                    printPausedInfo();
                 }
 
                 @Override
@@ -191,7 +277,8 @@ public class Game implements Serializable {
                     return "Pause the game";
                 }
             });
-        } else if (started) {
+        }
+        if (isPaused()) {
             actions.add(new Action() {
                 @Override
                 public void execute(String key, int index) {
@@ -219,7 +306,7 @@ public class Game implements Serializable {
                     System.out.println((i + 1) + ") " + gameOption.toString());
                 }
 
-                String input = ActionInput.promptInput("Which option (Option name, index or empty for 1.)? ").strip().toLowerCase();
+                String input = ActionInput.promptInput("Which option (Option name, index or empty for 1)? ").strip().toLowerCase();
 
                 if (input.length() > 0) {
                     GameOption foundOption = null;
@@ -266,6 +353,18 @@ public class Game implements Serializable {
         });
 
         return actions;
+    }
+
+
+    public void printPausedInfo() {
+        ColoredString.Color quickStatColor = ColoredString.Color.PURPLE;
+        int dashes = Termitaire.titleDashCount();
+
+        System.out.println(Termitaire.centerText(Termitaire.centerText("Paused", dashes, "-"), dashes));
+        System.out.println(" " + ColoredString.colorizeString("Time", quickStatColor) + ": " + statistics.getFormattedGameTime(true));
+        System.out.println(" " + ColoredString.colorizeString("Score", quickStatColor) + ": " + statistics.getScoreCounter().getScore());
+        System.out.println(" " + ColoredString.colorizeString("Seed", quickStatColor) + ": " + seed);
+        System.out.println("-".repeat(Termitaire.titleDashCount()));
     }
 
     private void addStockActions(List<Action> actions) {
@@ -486,10 +585,6 @@ public class Game implements Serializable {
                         switch (selectedCardPilePlace) {
                             case WASTE ->
                                     statistics.getScoreCounter().addScoreByScoringMap("cardMovedFromWasteToTableau");
-                            case TABLEAU -> {
-                                if (selectedCardsPileSource == column) break;
-                                statistics.getScoreCounter().addScoreByScoringMap("cardMovedBetweenTableauStacks");
-                            }
                             case FOUNDATION ->
                                     statistics.getScoreCounter().addScoreByScoringMap("cardMovedFromAFoundationToTableau");
                             default -> {

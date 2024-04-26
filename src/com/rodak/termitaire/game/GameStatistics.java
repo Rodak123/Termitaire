@@ -1,5 +1,6 @@
 package com.rodak.termitaire.game;
 
+import com.rodak.termitaire.Termitaire;
 import com.rodak.termitaire.utils.ScoreCounter;
 import com.rodak.termitaire.utils.Timer;
 
@@ -45,9 +46,6 @@ public class GameStatistics implements Serializable {
         keystrokes += amount;
     }
 
-    public String getFormattedGameTime() {
-        return getFormattedGameTime(true);
-    }
 
     public String getFormattedGameTime(boolean showMillis) {
         long rawMillis = timer.getTimeElapsed();
@@ -57,10 +55,10 @@ public class GameStatistics implements Serializable {
         String minutes = String.format("%02d", (rawMillis / 60000) % 60);
         String hours = String.format("%02d", Math.min(99, (rawMillis / 3600000) % 60));
 
-        return hours + ":" + minutes + (showMillis ? " " : ":") + seconds + (showMillis ? "." + millis : "");
+        return hours + ":" + minutes + ":" + seconds + (showMillis ? "." + millis : "");
     }
 
-    private String getFormattedKPM() {
+    private String getFormattedKpM() {
         float kpm = keystrokes / (timer.getTimeElapsed() / (60f * 1000f));
 
         int rounding = (int) Math.pow(10, 3);
@@ -70,8 +68,16 @@ public class GameStatistics implements Serializable {
     public LinkedHashMap<String, String> getAllAndReset() {
         LinkedHashMap<String, String> stats = new LinkedHashMap<>();
 
-        stats.put("Score", String.valueOf(scoreCounter.getScore((int) (timer.getTimeElapsed() / 1000f))));
-        stats.put("Time", getFormattedGameTime());
+        int score = scoreCounter.getScore();
+        int secondsElapsed = (int) (timer.getTimeElapsed() / 1000f);
+        int penaltyScore = scoreCounter.getScorePenalty(secondsElapsed);
+        int bonusScore = scoreCounter.getScoreBonus(secondsElapsed);
+        stats.put("Score", String.valueOf(score));
+        stats.put("Penalty Score", String.valueOf(penaltyScore));
+        stats.put("Bonus Score", String.valueOf(bonusScore));
+        stats.put("Total Score", String.valueOf(score + bonusScore + penaltyScore));
+
+        stats.put("Time", getFormattedGameTime(true));
         stats.put("Attempts", String.valueOf(attempts));
 
         stats.put("Moves", String.valueOf(moves));
@@ -79,7 +85,8 @@ public class GameStatistics implements Serializable {
         stats.put("Redeals", String.valueOf(redeals));
 
         stats.put("Card Flips", String.valueOf(cardFlips));
-        stats.put("KPM", getFormattedKPM());
+        stats.put("KpM", getFormattedKpM());
+        stats.put("Seed", Termitaire.game.seed);
 
         attempts = 0;
 

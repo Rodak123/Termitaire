@@ -192,6 +192,8 @@ public class GameSettings {
         settings = new LinkedHashMap<>();
         groups = new LinkedHashMap<>();
 
+        putSetting("gameplay/autoFinish", new Value(true));
+
         putSetting("binds/waste", new Value(String.join(" ", GameBinds.Waste)));
         putSetting("binds/stock", new Value(String.join(" ", GameBinds.Stock)));
         putSetting("binds/tableau", new Value(String.join(" ", GameBinds.Tableau), 14, 14));

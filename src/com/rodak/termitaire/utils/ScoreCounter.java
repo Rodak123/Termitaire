@@ -13,7 +13,7 @@ public class ScoreCounter implements Serializable {
         scoringMap.put("cardMovedToAFoundation", 10);
         scoringMap.put("cardMovedFromWasteToTableau", 5);
         scoringMap.put("cardTurnedUpInATableau", 5);
-        scoringMap.put("cardMovedBetweenTableauStacks", 3);
+        scoringMap.put("maxTimeBonus", 10000);
 
         scoringMap.put("tenSecondsElapsed", -2);
         scoringMap.put("cardMovedFromAFoundationToTableau", -15);
@@ -30,9 +30,14 @@ public class ScoreCounter implements Serializable {
         return score;
     }
 
-    public int getScore(int secondsElapsed) {
-        int tenSecondPenalty = (secondsElapsed / 10) * getScoreDelta("tenSecondsElapsed");
-        return score + tenSecondPenalty;
+    public int getScorePenalty(int secondsElapsed) {
+        return (int) Math.floor((secondsElapsed / 10f)) * getScoreDelta("tenSecondsElapsed");
+    }
+
+    public int getScoreBonus(int secondsElapsed) {
+        if (Math.floor(secondsElapsed / 60f) > 20) return 0;
+
+        return (int) Math.ceil((1 - secondsElapsed / (20f * 60f)) * getScoreDelta("maxTimeBonus"));
     }
 
     public int getScoreDelta(String action) {

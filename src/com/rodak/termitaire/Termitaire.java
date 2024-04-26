@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Termitaire {
-
     private static boolean running;
 
     private static final int MIN_JAVA_MAJOR = 17;
@@ -177,8 +176,12 @@ public class Termitaire {
         actionInput.addAction(new Action() {
             @Override
             public void execute(String key, int index) {
-                printTitle();
-                printInfo();
+                if (game.isPaused()) {
+                    game.printPausedInfo();
+                } else {
+                    printTitle();
+                    printInfo();
+                }
             }
 
             @Override
@@ -188,7 +191,7 @@ public class Termitaire {
 
             @Override
             public String getInfo() {
-                return "Get info about this game";
+                return game.isPaused() ? "Get info about the paused game" : "Get info about " + NAME;
             }
         });
 

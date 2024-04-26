@@ -24,9 +24,8 @@ _CTITLE_Scoring_RESET_
  _CARDMOVEDTOAFOUNDATION_ points for each card moved to a foundation stack.
  _CARDMOVEDFROMWASTETOTABLEAU_ points for each card moved from the waste to a tableau stack.
  _CARDTURNEDUPINATABLEAU_ points for each card turned face-up in a tableau stack.
- _CARDMOVEDBETWEENTABLEAUSTACKS_ points for each card moved from one tableau stack to another.
  _TENSECONDSELAPSED_ points for each 10 seconds elapsed during a timed game. (Evaluated after completion)
  _CARDMOVEDFROMAFOUNDATIONTOTABLEAU_ points for each card moved from a foundation stack to a tableau stack.
  _PASSEDTHROUGHDECKAFTERTHREEPASSES_ points for each pass through the stock after four passes (Draw Three option).
  _PASSEDTHROUGHDECKAFTERONEPASS_ points for each pass through the stock after one pass (Draw One option).
- You receive a _GREEN_bonus_RESET_ when you complete a timed game. The shorter the game, the larger the bonus.
+ You receive a _GREEN_bonus_RESET_ when you complete a game. The shorter the game, the larger the bonus. No bonus after 20 minutes.
