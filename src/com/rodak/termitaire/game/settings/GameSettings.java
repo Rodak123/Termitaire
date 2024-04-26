@@ -185,11 +185,11 @@ public class GameSettings {
 
     public static final String SETTINGS_FILE_NAME = Termitaire.NAME.toLowerCase() + "_settings.txt";
 
-    private final HashMap<String, Value> settings;
+    private final LinkedHashMap<String, Value> settings;
     private final LinkedHashMap<String, String> groups;
 
     public GameSettings() {
-        settings = new HashMap<>();
+        settings = new LinkedHashMap<>();
         groups = new LinkedHashMap<>();
 
         putSetting("binds/waste", new Value(String.join(" ", GameBinds.Waste)));
@@ -205,6 +205,8 @@ public class GameSettings {
 
         putSetting("audio/mute", new Value(false));
         putSetting("audio/volume", new Value(1.0, 0, 1));
+        putSetting("audio/sfx", new Value(1.0, 0, 1));
+        putSetting("audio/music", new Value(1.0, 0, 1));
 
         putSetting("input/actionRows", new Value(3, 1, -1));
     }

@@ -83,6 +83,8 @@ public class Termitaire {
         GameSettings.getInstance().loadSettings();
         onSettingsUpdated(false);
 
+        soundManager.play(SoundManager.Sound.Startup);
+
         game = new Game();
         ConsoleCanvas canvas = GamePlotter.createFittingCanvas(game);
 
