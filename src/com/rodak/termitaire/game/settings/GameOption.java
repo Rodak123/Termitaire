@@ -1,4 +1,4 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game.settings;
 
 public enum GameOption {
     SingleDraw(1, "Draw 1 card at a time from the stock", true),

@@ -1,7 +1,11 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game.settings;
+
+import com.rodak.termitaire.ui.ColoredString;
+import com.rodak.termitaire.Termitaire;
+import com.rodak.termitaire.input.ActionInput;
+import com.rodak.termitaire.input.GameBinds;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -9,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import static com.rodak.termitaire.Termitaire.getApplicationFolderPath;
 
 public class GameSettings {
 
@@ -239,14 +245,7 @@ public class GameSettings {
     }
 
     private Path getSettingsPath() {
-        try {
-            Path path = Path.of(Termitaire.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            return path.getParent().resolve(SETTINGS_FILE_NAME);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-            System.out.println("Can't access the application folder");
-            return null;
-        }
+        return getApplicationFolderPath(SETTINGS_FILE_NAME);
     }
 
     public void storeSettings() {
@@ -318,7 +317,7 @@ public class GameSettings {
 
     private void listAllSettings() {
         ColoredString.Color groupColor = ColoredString.Color.YELLOW;
-        ColoredString.Color bindKeyColor = ColoredString.Color.BLUE;
+        ColoredString.Color bindKeyColor = ActionInput.INFO_COLOR;
 
         groups.put("other", "");
         groups.replaceAll((k, v) -> "");

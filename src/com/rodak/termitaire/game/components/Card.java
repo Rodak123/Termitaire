@@ -1,8 +1,13 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game.components;
 
+import com.rodak.termitaire.Termitaire;
+import com.rodak.termitaire.game.settings.GameSettings;
+import com.rodak.termitaire.ui.ColoredString;
+
+import java.io.Serializable;
 import java.util.Stack;
 
-public class Card {
+public class Card implements Serializable {
 
     public static ColoredString.Color RED = ColoredString.Color.RED;
     public static ColoredString.Color BLACK = ColoredString.Color.BLUE;
@@ -166,5 +171,9 @@ public class Card {
     @Override
     public String toString() {
         return "[" + rank + " of " + suit + "]";
+    }
+
+    public String toOrdinalString() {
+        return String.valueOf(rank.ordinal()) + suit.ordinal();
     }
 }

@@ -1,4 +1,8 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.input;
+
+import com.rodak.termitaire.ui.ColoredString;
+import com.rodak.termitaire.game.settings.GameSettings;
+import com.rodak.termitaire.Termitaire;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +16,10 @@ public class ActionInput {
         System.out.print(prompt);
         return keyboard.nextLine();
     }
+
+    public static ColoredString.Color COMMAND_COLOR = ColoredString.Color.GREEN;
+    public static ColoredString.Color INFO_COLOR = ColoredString.Color.BLUE;
+
 
     private final List<Action> actionList;
 
@@ -32,9 +40,6 @@ public class ActionInput {
         int maxRows = GameSettings.getInstance().getSetting("input/actionRows").getIntVal();
         int marginLeft = 4;
 
-        ColoredString.Color commandColor = ColoredString.Color.GREEN;
-        ColoredString.Color infoColor = ColoredString.Color.BLUE;
-
         System.out.println("\nAvailable actions:");
 
         ArrayList<String> commandStrings = new ArrayList<>();
@@ -42,12 +47,12 @@ public class ActionInput {
             StringBuilder commandsString = new StringBuilder();
             String[] commands = action.getCommands();
             for (int i = 0; i < commands.length; i++) {
-                commandsString.append(ColoredString.colorizeString(commands[i], commandColor));
+                commandsString.append(ColoredString.colorizeString(commands[i], COMMAND_COLOR));
                 if (i < commands.length - 1) {
                     commandsString.append(", ");
                 }
             }
-            commandStrings.add(" ".repeat(marginLeft) + "[" + commandsString + "] -> " + ColoredString.colorizeString(action.getInfo(), infoColor));
+            commandStrings.add(" ".repeat(marginLeft) + "[" + commandsString + "] -> " + ColoredString.colorizeString(action.getInfo(), INFO_COLOR));
         }
 
         int rows = Math.min(commandStrings.size(), maxRows);

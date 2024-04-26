@@ -1,5 +1,7 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.input;
 
+
+import com.rodak.termitaire.game.settings.GameSettings;
 
 public class GameBinds {
     public static String[] Waste = new String[]{"o"};

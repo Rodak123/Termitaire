@@ -1,16 +1,26 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game;
 
+import com.rodak.termitaire.game.components.Card;
+import com.rodak.termitaire.game.components.CardPlace;
+import com.rodak.termitaire.Termitaire;
+import com.rodak.termitaire.game.settings.GameOption;
+import com.rodak.termitaire.input.Action;
+import com.rodak.termitaire.input.ActionInput;
+import com.rodak.termitaire.input.GameBinds;
+
+import java.io.Serializable;
 import java.util.*;
 
-public class Game {
+public class Game implements Serializable {
 
     private final List<Stack<Card>> foundations;
     private final List<Stack<Card>> tableau;
     private final Stack<Card> waste;
     private final Stack<Card> stock;
+    public String savePath = null;
 
     private final Stack<Card> selectedCardsPile;
-    private SelectablePlace selectedCardPilePlace;
+    private CardPlace selectedCardPilePlace;
 
     private Stack<Card> selectedCardsPileSource = null;
 
@@ -45,6 +55,8 @@ public class Game {
         }
         if (!won) {
             won = true;
+            playing = false;
+            started = false;
             Termitaire.soundManager.play(SoundManager.Sound.Victory);
         }
         return true;
@@ -53,6 +65,7 @@ public class Game {
     public void newGame(GameOption option) {
         playing = true;
         started = true;
+        won = false;
         this.option = option;
 
         statistics = new GameStatistics();
@@ -114,7 +127,7 @@ public class Game {
 
         if (!selectedCardsPileSource.empty()) {
             selectedCardsPileSource.peek().show();
-            if (selectedCardPilePlace == SelectablePlace.TABLEAU) {
+            if (selectedCardPilePlace == CardPlace.TABLEAU) {
                 statistics.getScoreCounter().addScoreByScoringMap("cardTurnedUpInATableau");
             }
         }
@@ -369,7 +382,7 @@ public class Game {
 
                     selectedCardsPile.add(foundation.pop());
                     selectedCardsPileSource = foundation;
-                    selectedCardPilePlace = SelectablePlace.FOUNDATION;
+                    selectedCardPilePlace = CardPlace.FOUNDATION;
                     Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                 }
 
@@ -446,7 +459,7 @@ public class Game {
 
                     if (column.size() != initialSize) {
                         selectedCardsPileSource = column;
-                        selectedCardPilePlace = SelectablePlace.TABLEAU;
+                        selectedCardPilePlace = CardPlace.TABLEAU;
                         Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                     }
                 }
@@ -483,6 +496,9 @@ public class Game {
                             }
                             case FOUNDATION ->
                                     statistics.getScoreCounter().addScoreByScoringMap("cardMovedFromAFoundationToTableau");
+                            default -> {
+                                // ignored
+                            }
                         }
                         addSelectedCardsToStack(column);
                     } else {
@@ -517,7 +533,7 @@ public class Game {
                 public void execute(String key, int index) {
                     selectedCardsPile.add(waste.pop());
                     selectedCardsPileSource = waste;
-                    selectedCardPilePlace = SelectablePlace.WASTE;
+                    selectedCardPilePlace = CardPlace.WASTE;
                     Termitaire.soundManager.play(SoundManager.Sound.CardUp);
                 }
 
@@ -532,5 +548,9 @@ public class Game {
                 }
             });
         }
+    }
+
+    public boolean canBeSaved() {
+        return started && !playing && !won;
     }
 }

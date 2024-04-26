@@ -1,4 +1,4 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.ui;
 
 import java.util.Arrays;
 

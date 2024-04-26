@@ -1,12 +1,23 @@
 package com.rodak.termitaire;
 
-import java.net.URISyntaxException;
-import java.nio.file.*;
+import com.rodak.termitaire.game.Game;
+import com.rodak.termitaire.game.SoundManager;
+import com.rodak.termitaire.game.serialization.GameSerialization;
+import com.rodak.termitaire.game.settings.GameSettings;
+import com.rodak.termitaire.game.components.Card;
+import com.rodak.termitaire.input.Action;
+import com.rodak.termitaire.input.ActionInput;
+import com.rodak.termitaire.input.GameBinds;
+import com.rodak.termitaire.ui.ColoredString;
+import com.rodak.termitaire.ui.ConsoleCanvas;
+import com.rodak.termitaire.ui.GamePlotter;
+
 import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Termitaire {
 
@@ -37,12 +48,6 @@ public class Termitaire {
 
         clearScreen();
         printTitle();
-//        System.out.println();
-//        System.out.println(String.join("\n", new String[]{
-//                "Todo:",
-//                "- Saving game + Loading saves",
-//        }));
-//        System.out.println();
         runGame();
     }
 
@@ -118,6 +123,55 @@ public class Termitaire {
     }
 
     private static void addPausedActions(ActionInput actionInput) {
+        if (game.canBeSaved()) {
+            actionInput.addAction(new Action() {
+                @Override
+                public void execute(String key, int index) {
+                    GameSerialization.saveGame(game);
+                }
+
+                @Override
+                public String[] getCommands() {
+                    return new String[]{"save"};
+                }
+
+                @Override
+                public String getInfo() {
+                    return "Saves currently paused game to the saves directory";
+                }
+            });
+        }
+        if (GameSerialization.canLoadGame()) {
+            actionInput.addAction(new Action() {
+                @Override
+                public void execute(String key, int index) {
+                    if (game.canBeSaved()) {
+                        String input = ActionInput.promptInput("Are you sure you want to load a game, doing so will overwrite the currently paused game(Y/n)? ");
+                        if (!(input.length() == 0 || input.equalsIgnoreCase("y"))) {
+                            return;
+                        }
+                    }
+                    Game loadedGame = GameSerialization.loadGame();
+                    if (loadedGame == null) {
+                        System.out.println("Game save not loaded");
+                        return;
+                    }
+                    game = loadedGame;
+                    System.out.println("Game save loaded");
+                }
+
+                @Override
+                public String[] getCommands() {
+                    return new String[]{"load"};
+                }
+
+                @Override
+                public String getInfo() {
+                    return "Load a saved game from the saves directory";
+                }
+            });
+        }
+
         actionInput.addAction(new Action() {
             @Override
             public void execute(String key, int index) {
@@ -254,6 +308,18 @@ public class Termitaire {
 
     public static int titleDashCount() {
         return 32;
+    }
+
+
+    public static Path getApplicationFolderPath(String resolvePath) {
+        try {
+            Path path = Path.of(Termitaire.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            return path.getParent().resolve(resolvePath);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            System.out.println("Can't access the application folder");
+            return null;
+        }
     }
 
 }

@@ -1,8 +1,9 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.utils;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class ScoreCounter {
+public class ScoreCounter implements Serializable {
 
     public final HashMap<String, Integer> scoringMap = new HashMap<>();
 

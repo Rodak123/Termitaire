@@ -1,7 +1,9 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.utils;
 
-public class Timer {
-    private long startTime;
+import java.io.Serializable;
+
+public class Timer implements Serializable {
+    private transient long startTime;
     private long elapsedTime;
 
     public Timer() {

@@ -1,4 +1,9 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.ui;
+
+import com.rodak.termitaire.game.components.Card;
+import com.rodak.termitaire.Termitaire;
+import com.rodak.termitaire.game.Game;
+import com.rodak.termitaire.input.GameBinds;
 
 import java.util.*;
 

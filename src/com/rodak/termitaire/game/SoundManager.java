@@ -1,4 +1,7 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game;
+
+import com.rodak.termitaire.game.settings.GameSettings;
+import com.rodak.termitaire.ui.ColoredString;
 
 import javax.sound.sampled.*;
 import java.io.*;

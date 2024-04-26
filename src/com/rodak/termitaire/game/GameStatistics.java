@@ -1,10 +1,12 @@
-package com.rodak.termitaire;
+package com.rodak.termitaire.game;
 
-import java.time.Duration;
-import java.time.Instant;
+import com.rodak.termitaire.utils.ScoreCounter;
+import com.rodak.termitaire.utils.Timer;
+
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 
-public class GameStatistics {
+public class GameStatistics implements Serializable {
 
     private static int attempts;
     private int moves, draws, redeals, cardFlips, keystrokes;
