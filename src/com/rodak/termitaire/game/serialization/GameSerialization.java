@@ -9,6 +9,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.rodak.termitaire.Termitaire.getApplicationFolderPath;
@@ -36,30 +38,53 @@ public class GameSerialization {
         }
 
         if (saveFilePath == null) {
-            saveFilePath = askForSaveFilePath(savesFolderPath, false);
+            saveFilePath = askForSaveFilePath(savesFolderPath);
         }
         if (saveFilePath == null) {
             return;
         }
 
-        System.out.println("Saving to: " + ColoredString.colorizeString(saveFilePath.toAbsolutePath().toString(), ActionInput.INFO_COLOR));
+        System.out.println("Saving to '" + ColoredString.colorizeString(saveFilePath.toAbsolutePath().toString(), ActionInput.INFO_COLOR) + "'");
 
         try (FileOutputStream fileOut = new FileOutputStream(saveFilePath.toAbsolutePath().toString());
              ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             game.savePath = saveFilePath.toAbsolutePath().toString();
             out.writeObject(game);
-            System.out.println("Game saved to: " + saveFilePath.getFileName());
+            System.out.println("Game saved to '" + saveFilePath.getFileName() + "'");
         } catch (IOException e) {
             System.out.println("Can't save game " + e.getMessage());
         }
     }
 
     public static Game loadGame() {
+        Termitaire.clearScreen();
         final Path savesFolderPath = getSavesFolderPath();
         if (savesFolderPath == null) {
             return null;
         }
-        final Path saveFilePath = askForSaveFilePath(savesFolderPath, true);
+        Path saveFilePath = null;
+
+        List<Path> saves = getAllSaves();
+        if (saves.size() > 0) {
+            do {
+                Termitaire.clearScreen();
+                printAllSaves(saves);
+                String input = ActionInput.promptInput("Select a save to load (index or name): ");
+                for (int i = 0; i < saves.size(); i++) {
+                    Path savePath = saves.get(i);
+                    String saveName = savePath.getFileName().toString().replaceFirst("[.][^.]+$", "");
+                    if (input.equals(saveName) ||
+                            input.equals(String.valueOf(i))) {
+                        saveFilePath = savePath;
+                        break;
+                    }
+                }
+                if (saveFilePath == null) {
+                    System.out.println("No save found from: '" + input + "'");
+                }
+            } while (saveFilePath == null);
+        }
+
         if (saveFilePath == null) {
             return null;
         }
@@ -75,18 +100,47 @@ public class GameSerialization {
         return game;
     }
 
+    private static void printAllSaves(List<Path> saves) {
+        for (int i = 0; i < saves.size(); i++) {
+            Path savePath = saves.get(i);
+            String saveName = savePath.getFileName().toString().replaceFirst("[.][^.]+$", "");
+            System.out.println(
+                    "[" + ColoredString.colorizeString(String.valueOf(i), ActionInput.COMMAND_COLOR) + "] " +
+                            ColoredString.colorizeString(saveName, ActionInput.INFO_COLOR) +
+                            " (" + savePath.toAbsolutePath() + ")");
+        }
+    }
+
+    private static List<Path> getAllSaves() {
+        List<Path> saves = new ArrayList<>();
+
+        Path path = getSavesFolderPath();
+        if (path == null) return saves;
+        try (Stream<Path> paths = Files.walk(path)) {
+            paths.forEach(saveFile -> {
+                if (Files.isRegularFile(saveFile) && saveFile.toString().endsWith(SAVE_FILE_EXTENSION)) {
+                    saves.add(saveFile);
+                }
+            });
+//            paths.anyMatch(p -> Files.isRegularFile(p) && p.toString().endsWith(SAVE_FILE_EXTENSION));
+        } catch (IOException e) {
+            System.out.println("Can't list all saves: " + e.getMessage());
+        }
+        return saves;
+    }
+
     public static boolean canLoadGame() {
         Path path = getSavesFolderPath();
         if (path == null) return false;
         try (Stream<Path> paths = Files.walk(path)) {
             return paths.anyMatch(p -> Files.isRegularFile(p) && p.toString().endsWith(SAVE_FILE_EXTENSION));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Can't read the saves folder: " + e.getMessage());
             return false;
         }
     }
 
-    private static Path askForSaveFilePath(Path savesFolderPath, boolean mustExist) {
+    private static Path askForSaveFilePath(Path savesFolderPath) {
         Path saveFilePath = null;
         do {
             String input = ActionInput.promptInput("Pick a name for the save (NAME" + SAVE_FILE_EXTENSION + ")('" + ColoredString.colorizeString("quit", ActionInput.COMMAND_COLOR) + "' to cancel): ");
@@ -98,11 +152,8 @@ public class GameSerialization {
                 continue;
             }
             saveFilePath = savesFolderPath.resolve(input + SAVE_FILE_EXTENSION);
-            if (!mustExist && Files.exists(saveFilePath)) {
+            if (Files.exists(saveFilePath)) {
                 System.out.println("File '" + saveFilePath.getFileName() + "' already exists");
-                saveFilePath = null;
-            } else if (mustExist && Files.notExists(savesFolderPath)) {
-                System.out.println("File '" + saveFilePath.getFileName() + "' does not exist");
                 saveFilePath = null;
             }
         } while (saveFilePath == null);

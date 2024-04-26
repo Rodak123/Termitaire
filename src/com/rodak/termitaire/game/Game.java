@@ -219,7 +219,7 @@ public class Game implements Serializable {
                     System.out.println((i + 1) + ") " + gameOption.toString());
                 }
 
-                String input = ActionInput.promptInput("Which option (Option name, index or empty)? ").strip().toLowerCase();
+                String input = ActionInput.promptInput("Which option (Option name, index or empty for 1.)? ").strip().toLowerCase();
 
                 if (input.length() > 0) {
                     GameOption foundOption = null;
@@ -422,21 +422,17 @@ public class Game implements Serializable {
                             Card card = column.pop();
                             selectedCardsPile.add(card);
                         } else if (cardInput.length == 1) {
-                            try {
-                                int cardIndex = Integer.parseInt(cardInput[0]);
-                                if (cardIndex <= 0) {
-                                    System.out.println("No cards where taken.");
-                                }
-
-                                while (cardIndex < column.size()) {
-                                    if (column.get(cardIndex).isHidden()) {
-                                        cardIndex++;
-                                        continue;
+                            for (int i = column.size() - 1; i >= 0; i--) {
+                                if (String.valueOf(i).equalsIgnoreCase(cardInput[0])) {
+                                    while (i < column.size()) {
+                                        if (column.get(i).isHidden()) {
+                                            i++;
+                                            continue;
+                                        }
+                                        selectedCardsPile.add(column.remove(i));
                                     }
-                                    selectedCardsPile.add(column.remove(cardIndex));
+                                    break;
                                 }
-                            } catch (NumberFormatException e) {
-                                System.out.println(cardInput[0] + " is not a valid index.");
                             }
                         } else if (cardInput.length == 2) {
                             for (int i = column.size() - 1; i >= 0; i--) {

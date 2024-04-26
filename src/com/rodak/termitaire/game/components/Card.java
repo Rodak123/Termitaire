@@ -130,14 +130,16 @@ public class Card implements Serializable {
                 if (base == null) {
                     return card.rank == Rank.KING;
                 }
-                return base.rank.ordinal() - card.rank.ordinal() == 1 &&
+                return !base.isHidden() &&
+                        base.rank.ordinal() - card.rank.ordinal() == 1 &&
                         base.suit.ordinal() % 2 != card.suit.ordinal() % 2;
             }
             case FOUNDATION -> {
                 if (base == null) {
                     return card.rank == Rank.ACE;
                 }
-                return base.rank.ordinal() - card.rank.ordinal() == -1 &&
+                return !base.isHidden() &&
+                        base.rank.ordinal() - card.rank.ordinal() == -1 &&
                         base.suit == card.suit;
             }
         }
@@ -170,6 +172,7 @@ public class Card implements Serializable {
 
     @Override
     public String toString() {
+        if (isHidden()) return "[HIDDEN]";
         return "[" + rank + " of " + suit + "]";
     }
 
