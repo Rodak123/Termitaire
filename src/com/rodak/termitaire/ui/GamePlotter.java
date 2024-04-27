@@ -123,6 +123,7 @@ public class GamePlotter {
         for (Map.Entry<String, String> entry : stats.entrySet()) {
             String stat = Termitaire.rightAlignText(entry.getKey(), halfDashes) + ":";
             String value = entry.getValue();
+            if (value.length() > halfDashes) value = value.substring(0, halfDashes);
 
             // stat: value
 
@@ -196,7 +197,7 @@ public class GamePlotter {
     }
 
     public static ConsoleCanvas createFittingCanvas(Game game) {
-        return new ConsoleCanvas(cardIndexSpace + (Card.plotWidth + GamePlotter.cardSpacing[0]) * (game.getTableau().size() + 2), Card.plotHeight + GamePlotter.cardSpacing[1] * (Card.Rank.values().length + 2) + 2);
+        return new ConsoleCanvas(cardIndexSpace + (Card.plotWidth + GamePlotter.cardSpacing[0]) * (game.getTableau().size() + 2), Card.plotHeight + GamePlotter.cardSpacing[1] * (Card.Rank.values().length + 2 + 8) + 2);
     }
 
 }
