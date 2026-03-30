@@ -27,3 +27,12 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Python ###
+__pycache__
+.venv
+venv
+
+### Gradle ###
+build/
+dist/
